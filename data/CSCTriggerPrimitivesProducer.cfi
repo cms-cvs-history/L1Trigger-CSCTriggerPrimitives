@@ -1,0 +1,19 @@
+# Default parameters for CSCTriggerPrimitives generator
+# =====================================================
+module lctproducer = CSCTriggerPrimitivesProducer 
+{
+  # Name of digi producer module(s)
+  string CSCComparatorDigiProducer = "muoncscdigi"
+  string CSCWireDigiProducer       = "muoncscdigi"
+
+  # Parameters for ALCT processors
+  int32 alctNphThresh   =  2
+  int32 alctNphPattern  =  4
+  int32 alctDriftDelay  =  3
+  int32 alctFifoPretrig = 12
+  int32 alctTrigMode    =  3
+  int32 alctMode        =  1
+  int32 alctBxWidth     =  6
+  int32 alctFifoTbins   =  8
+  int32 alctL1aWindow   =  5
+}
