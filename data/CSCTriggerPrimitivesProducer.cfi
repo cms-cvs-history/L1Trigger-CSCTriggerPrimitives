@@ -1,7 +1,11 @@
+include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
+
 # Default parameters for CSCTriggerPrimitives generator
 # =====================================================
 module lctproducer = CSCTriggerPrimitivesProducer 
 {
+  using CSCCommonTrigger	
+
   # Name of digi producer module(s)
   string CSCComparatorDigiProducer = "muoncscdigi"
   string CSCWireDigiProducer       = "muoncscdigi"
