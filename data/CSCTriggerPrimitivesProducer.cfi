@@ -7,8 +7,8 @@ module lctproducer = CSCTriggerPrimitivesProducer
   using CSCCommonTrigger	
 
   # Name of digi producer module(s)
-  string CSCComparatorDigiProducer = "muoncscdigi"
-  string CSCWireDigiProducer       = "muoncscdigi"
+  InputTag CSCComparatorDigiProducer = muoncscdigi:MuonCSCComparatorDigi
+  InputTag CSCWireDigiProducer       = muoncscdigi:MuonCSCWireDigi
 
   # Parameters for ALCT processors
   PSet alctParam = { int32 alctNphThresh   =  2
