@@ -4,8 +4,12 @@
 <use name=Geometry/Records>
 <use name=Geometry/CSCGeometry>
 <use name=L1Trigger/CSCCommonTrigger>
+<use name=L1Trigger/CSCTriggerPrimitives>
+<use name=SimDataFormats/HepMCProduct>
+<use name=SimDataFormats/EncodedEventId>
 <use name=root>
 
-<library file="CSCTriggerPrimitivesReader.cc" name=CSCTriggerPrimitivesReader>
+//<library file="CSCTriggerPrimitivesReader.cc" name=CSCTriggerPrimitivesReader>
+<library file="*.cc" name=CSCTriggerPrimitivesReader>
    <flags SEAL_PLUGIN_NAME="CSCTriggerPrimitivesReader">
 </library>
