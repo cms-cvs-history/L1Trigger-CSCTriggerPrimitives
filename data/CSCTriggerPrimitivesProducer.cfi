@@ -24,12 +24,15 @@ module lctproducer = CSCTriggerPrimitivesProducer
 	untracked int32 verbosity = 0
     }
 
+    # Parameters for CLCT processors: default
     PSet clctParam = {
 	int32 clctBxWidth     =  6
-	int32 clctHsThresh    =  4
-	int32 clctDsThresh    =  4
+	int32 clctHsThresh    =  2
+	int32 clctDsThresh    =  2
+	int32 clctFifoTbins   = 12
+	int32 clctFifoPretrig =  7
 	int32 clctDriftDelay  =  2
-	int32 clctNphPattern  =  1
+	int32 clctNphPattern  =  4
 	untracked int32 verbosity = 0
     }
 
