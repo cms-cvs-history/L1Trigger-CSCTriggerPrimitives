@@ -11,5 +11,5 @@
 
 //<library file="CSCTriggerPrimitivesReader.cc" name=CSCTriggerPrimitivesReader>
 <library file="*.cc" name=CSCTriggerPrimitivesReader>
-   <flags SEAL_PLUGIN_NAME="CSCTriggerPrimitivesReader">
+   <flags EDM_PLUGIN=1>
 </library>
