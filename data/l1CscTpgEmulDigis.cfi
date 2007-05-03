@@ -1,9 +1,6 @@
-include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
-
-# Default parameters for CSCTriggerPrimitives generator
-# =====================================================
 module l1CscTpgDigis = CSCTriggerPrimitivesProducer 
 {
+    include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
     using CSCCommonTrigger	
 
     # Name of digi producer module(s)
