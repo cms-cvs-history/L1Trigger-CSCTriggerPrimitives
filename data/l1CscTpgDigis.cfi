@@ -2,7 +2,7 @@ include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
 
 # Default parameters for CSCTriggerPrimitives generator
 # =====================================================
-module lctproducer = CSCTriggerPrimitivesProducer 
+module l1CscTpgDigis = CSCTriggerPrimitivesProducer 
 {
     using CSCCommonTrigger	
 
