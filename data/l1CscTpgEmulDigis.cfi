@@ -1,4 +1,4 @@
-module l1CscTpgDigis = CSCTriggerPrimitivesProducer 
+module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer 
 {
     include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
     using CSCCommonTrigger	
