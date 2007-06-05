@@ -1,6 +1,7 @@
+include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
+
 module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer 
 {
-    include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
     using CSCCommonTrigger	
 
     # Name of digi producer module(s)
