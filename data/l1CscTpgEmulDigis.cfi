@@ -11,7 +11,7 @@ module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer
     # Parameters for ALCT processors: default
     PSet alctParam = {
 	uint32 alctFifoTbins   = 16
-	uint32 alctFifoPretrig = 16
+	uint32 alctFifoPretrig = 10
 	uint32 alctBxWidth     =  6
 	uint32 alctDriftDelay  =  3
 	uint32 alctNphThresh   =  2
@@ -39,7 +39,7 @@ module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer
     # Parameters for ALCT processors: MTCC-II
     PSet alctParamMTCC2 = {
 	uint32 alctFifoTbins   = 16
-	uint32 alctFifoPretrig = 16
+	uint32 alctFifoPretrig = 10
 	uint32 alctBxWidth     =  6
 	uint32 alctDriftDelay  =  3
 	uint32 alctNphThresh   =  2
