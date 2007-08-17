@@ -1,15 +1,22 @@
 include "L1Trigger/CSCCommonTrigger/data/CSCCommonTrigger.cfi"
 
+# Default parameters for CSCTriggerPrimitives generator
+# =====================================================
 module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer 
 {
-    using CSCCommonTrigger	
+    using CSCCommonTrigger
 
     # Name of digi producer module(s)
     InputTag CSCComparatorDigiProducer = muonCSCDigis:MuonCSCComparatorDigi
     InputTag CSCWireDigiProducer       = muonCSCDigis:MuonCSCWireDigi
 
+    # Parameters common for all boards
+    PSet commonParam = {
+	bool isMTCC = false
+    }
+
     # Parameters for ALCT processors: default
-    PSet alctParam = {
+    PSet alctParamDef = {
 	uint32 alctFifoTbins   = 16
 	uint32 alctFifoPretrig = 10
 	uint32 alctBxWidth     =  6
@@ -51,7 +58,7 @@ module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer
     }
 
     # Parameters for CLCT processors: default
-    PSet clctParam = {
+    PSet clctParamDef = {
 	uint32 clctBxWidth     =  6
 	uint32 clctDriftDelay  =  2
 	uint32 clctHsThresh    =  2
