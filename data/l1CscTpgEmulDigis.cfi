@@ -66,6 +66,11 @@ module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer
 	uint32 clctNphPattern  =  4
 	uint32 clctFifoTbins   = 12
 	uint32 clctFifoPretrig =  7
+	# TMB07 parameters
+	uint32 clctPidThresh   =  2
+	uint32 clctSepSrc      =  1
+	uint32 clctSepVme      = 10
+	# Debug
 	untracked int32 verbosity = 0
     }
 
@@ -78,6 +83,12 @@ module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer
 	uint32 clctNphPattern  =  1
 	uint32 clctFifoTbins   = 12
 	uint32 clctFifoPretrig =  7
+	# TMB07 parameters
+	uint32 clctHitThresh   =  2
+	uint32 clctPidThresh   =  2
+	uint32 clctSepSrc      =  1
+	uint32 clctSepVme      = 10
+	# Debug
 	untracked int32 verbosity = 0
     }
 
