@@ -12,7 +12,6 @@
 <use name=SimDataFormats/TrackingHit>
 <use name=root>
 
-//<library file="CSCTriggerPrimitivesReader.cc" name=CSCTriggerPrimitivesReader>
 <library file="*.cc" name=CSCTriggerPrimitivesReader>
    <flags EDM_PLUGIN=1>
 </library>
