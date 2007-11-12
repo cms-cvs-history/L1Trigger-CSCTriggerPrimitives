@@ -12,7 +12,8 @@ module l1CscTpgEmulDigis = CSCTriggerPrimitivesProducer
 
     # Parameters common for all boards
     PSet commonParam = {
-	bool isMTCC = false
+	bool isMTCC  = false
+	bool isTMB07 = false
     }
 
     # Parameters for ALCT processors: default
