@@ -13,7 +13,7 @@ module lctreader = CSCTriggerPrimitivesReader {
 #                                       produced by unpacker
     untracked string CSCLCTProducerData = "cscunpacker"
 #                                       produced by emulator 
-    untracked string CSCLCTProducerEmul = "l1CscTpgEmulDigis"
+    untracked string CSCLCTProducerEmul = "cscTriggerPrimitiveDigis"
 # Labels to retrieve comparator and wire digis.
 #  (Used only when emulLctsIn = true.)
     InputTag CSCComparatorDigiProducer = muonCSCDigis:MuonCSCComparatorDigi

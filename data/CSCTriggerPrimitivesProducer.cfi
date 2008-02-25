@@ -1,4 +1,4 @@
-# This file is obsolete and will be removed soon.  Use l1CscTpgEmulDigis.cfi
+# This file is obsolete and will be removed soon.  Use cscTriggerPrimitiveDigis.cfi
 # instead.
 
-include "L1Trigger/CSCTriggerPrimitives/data/l1CscTpgEmulDigis.cfi"
+include "L1Trigger/CSCTriggerPrimitives/data/cscTriggerPrimitiveDigis.cfi"
