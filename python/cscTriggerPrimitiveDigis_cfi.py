@@ -33,7 +33,7 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         clctPidThresh = cms.uint32(2)
     ),
     # Name of digi producer module(s)
-    CSCComparatorDigiProducer = cms.InputTag("muonCSCDigis","MuonCSCComparatorDigi"),
+    CSCComparatorDigiProducer = cms.InputTag("simMuonCSCDigis","MuonCSCComparatorDigi"),
     # Parameters for CLCT processors: MTCC-II
     clctParamMTCC2 = cms.PSet(
         clctDriftDelay = cms.uint32(2),
@@ -58,7 +58,7 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         isTMB07 = cms.bool(True),
         isMTCC = cms.bool(True)
     ),
-    CSCWireDigiProducer = cms.InputTag("muonCSCDigis","MuonCSCWireDigi"),
+    CSCWireDigiProducer = cms.InputTag("simMuonCSCDigis","MuonCSCWireDigi"),
     # Parameters for ALCT processors: MTCC-II
     alctParamMTCC2 = cms.PSet(
         alctMode = cms.uint32(0),

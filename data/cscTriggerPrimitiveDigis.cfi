@@ -7,8 +7,8 @@ module cscTriggerPrimitiveDigis = CSCTriggerPrimitivesProducer
     using CSCCommonTrigger
 
     # Name of digi producer module(s)
-    InputTag CSCComparatorDigiProducer = muonCSCDigis:MuonCSCComparatorDigi
-    InputTag CSCWireDigiProducer       = muonCSCDigis:MuonCSCWireDigi
+    InputTag CSCComparatorDigiProducer = simMuonCSCDigis:MuonCSCComparatorDigi
+    InputTag CSCWireDigiProducer       = simMuonCSCDigis:MuonCSCWireDigi
 
     # Parameters common for all boards
     PSet commonParam = {
