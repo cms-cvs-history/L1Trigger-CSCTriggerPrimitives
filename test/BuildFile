@@ -10,7 +10,7 @@
 <use name=L1Trigger/CSCTriggerPrimitives>
 <use name=SimDataFormats/HepMCProduct>
 <use name=SimDataFormats/TrackingHit>
-<use name=root>
+<use name=rootgraphics>
 
 <library file="*.cc" name=CSCTriggerPrimitivesReader>
    <flags EDM_PLUGIN=1>
