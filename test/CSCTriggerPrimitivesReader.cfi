@@ -16,6 +16,6 @@ module lctreader = CSCTriggerPrimitivesReader {
     untracked string CSCLCTProducerEmul = "cscTriggerPrimitiveDigis"
 # Labels to retrieve comparator and wire digis.
 #  (Used only when emulLctsIn = true.)
-    InputTag CSCComparatorDigiProducer = simMuonCSCDigis:MuonCSCComparatorDigi
-    InputTag CSCWireDigiProducer       = simMuonCSCDigis:MuonCSCWireDigi
+    InputTag CSCComparatorDigiProducer = muonCSCDigis:MuonCSCComparatorDigi
+    InputTag CSCWireDigiProducer       = muonCSCDigis:MuonCSCWireDigi
 }
