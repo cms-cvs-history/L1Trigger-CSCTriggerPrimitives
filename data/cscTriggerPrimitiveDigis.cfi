@@ -20,15 +20,14 @@ module cscTriggerPrimitiveDigis = CSCTriggerPrimitivesProducer
     PSet alctParamDef = {
 	uint32 alctFifoTbins   = 16
 	uint32 alctFifoPretrig = 10
-	uint32 alctBxWidth     =  6
 	uint32 alctDriftDelay  =  3
-	uint32 alctNphThresh   =  2
-	uint32 alctNphPattern  =  4
-	uint32 alctAccThresh   =  2
-	uint32 alctAccPattern  =  4
-	uint32 alctTrigMode    =  3
-	uint32 alctMode        =  1
-	uint32 alctL1aWindow   =  5
+	uint32 alctNplanesHitPretrig =  2
+	uint32 alctNplanesHitPattern =  4
+	uint32 alctNplanesHitAccelPretrig =  2
+	uint32 alctNplanesHitAccelPattern =  4
+	uint32 alctTrigMode       =  3
+	uint32 alctAccelMode      =  1
+	uint32 alctL1aWindowWidth =  5
 	untracked int32 verbosity = 0
     }
 
@@ -36,15 +35,14 @@ module cscTriggerPrimitiveDigis = CSCTriggerPrimitivesProducer
     PSet alctParamMTCC1 = {
 	uint32 alctFifoTbins   = 10
 	uint32 alctFifoPretrig = 12     # guess
-	uint32 alctBxWidth     =  6
 	uint32 alctDriftDelay  =  3
-	uint32 alctNphThresh   =  4
-	uint32 alctNphPattern  =  4
-	uint32 alctAccThresh   =  4
-	uint32 alctAccPattern  =  4
-	uint32 alctTrigMode    =  0
-	uint32 alctMode        =  2     # guess
-	uint32 alctL1aWindow   =  3
+	uint32 alctNplanesHitPretrig =  4
+	uint32 alctNplanesHitPattern =  4
+	uint32 alctNplanesHitAccelPretrig =  4
+	uint32 alctNplanesHitAccelPattern =  4
+	uint32 alctTrigMode       =  0
+	uint32 alctAccelMode      =  2     # guess
+	uint32 alctL1aWindowWidth =  3
 	untracked int32 verbosity = 0
     }
 
@@ -52,49 +50,41 @@ module cscTriggerPrimitiveDigis = CSCTriggerPrimitivesProducer
     PSet alctParamMTCC2 = {
 	uint32 alctFifoTbins   = 16
 	uint32 alctFifoPretrig = 10
-	uint32 alctBxWidth     =  6
 	uint32 alctDriftDelay  =  3
-	uint32 alctNphThresh   =  2
-	uint32 alctNphPattern  =  4
-	uint32 alctAccThresh   =  2
-	uint32 alctAccPattern  =  4
-	uint32 alctTrigMode    =  2
-	uint32 alctMode        =  0
-	uint32 alctL1aWindow   =  3
+	uint32 alctNplanesHitPretrig =  2
+	uint32 alctNplanesHitPattern =  4
+	uint32 alctNplanesHitAccelPretrig =  2
+	uint32 alctNplanesHitAccelPattern =  4
+	uint32 alctTrigMode       =  2
+	uint32 alctAccelMode      =  0
+	uint32 alctL1aWindowWidth =  3
 	untracked int32 verbosity = 0
     }
 
     # Parameters for CLCT processors: default
     PSet clctParamDef = {
-	uint32 clctBxWidth     =  6
-	uint32 clctDriftDelay  =  2
-	uint32 clctHsThresh    =  2
-	uint32 clctDsThresh    =  2
-	uint32 clctNphPattern  =  4
 	uint32 clctFifoTbins   = 12
 	uint32 clctFifoPretrig =  7
-	# TMB07 parameters
-	uint32 clctPidThresh   =  2
-	uint32 clctSepSrc      =  1
-	uint32 clctSepVme      = 10
+	uint32 clctHitPersist  =  6
+	uint32 clctDriftDelay  =  2
+	uint32 clctNplanesHitPretrig =  2
+	uint32 clctNplanesHitPattern =  4
+	uint32 clctPidThreshPretrig  =  2
+	uint32 clctMinSeparation     = 10
 	# Debug
 	untracked int32 verbosity = 0
     }
 
     # Parameters for CLCT processors: MTCC-II
     PSet clctParamMTCC2 = {
-	uint32 clctBxWidth     =  6
-	uint32 clctDriftDelay  =  2
-	uint32 clctHsThresh    =  4
-	uint32 clctDsThresh    =  4
-	uint32 clctNphPattern  =  1
 	uint32 clctFifoTbins   = 12
 	uint32 clctFifoPretrig =  7
-	# TMB07 parameters
-	uint32 clctHitThresh   =  2
-	uint32 clctPidThresh   =  2
-	uint32 clctSepSrc      =  1
-	uint32 clctSepVme      = 10
+	uint32 clctHitPersist  =  6
+	uint32 clctDriftDelay  =  2
+	uint32 clctNplanesHitPretrig =  4
+	uint32 clctNplanesHitPattern =  1
+	uint32 clctPidThreshPretrig  =  2
+	uint32 clctMinSeparation     = 10
 	# Debug
 	untracked int32 verbosity = 0
     }
