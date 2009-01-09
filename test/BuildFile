@@ -8,7 +8,7 @@
 <use name=Geometry/Records>
 <use name=L1Trigger/CSCCommonTrigger>
 <use name=L1Trigger/CSCTriggerPrimitives>
-<use name=SimDataFormats/HepMCProduct>
+<use name=SimDataFormats/GeneratorProducts>
 <use name=SimDataFormats/TrackingHit>
 <use name=rootgraphics>
 
