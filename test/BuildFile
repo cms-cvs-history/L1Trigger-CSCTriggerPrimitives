@@ -8,14 +8,16 @@
 <use name=Geometry/Records>
 <use name=L1Trigger/CSCCommonTrigger>
 <use name=L1Trigger/CSCTriggerPrimitives>
-<use name=SimDataFormats/GeneratorProducts>
+<use name=SimDataFormats/HepMCProduct>
 <use name=SimDataFormats/TrackingHit>
 <use name=rootgraphics>
+<use name=PhysicsTools/UtilAlgos>
+
 
 <library file="*Analyzer.cc" name=L1TriggerCSCTriggerPrimitivesAnalyzer>
 </library>
 
 <library file="CSCTriggerPrimitivesReader.cc" name=CSCTriggerPrimitivesReader>
-   <lib name=L1TriggerCSCTriggerPrimitivesAnalyzer>
    <flags EDM_PLUGIN=1>
+   <lib name=L1TriggerCSCTriggerPrimitivesAnalyzer>
 </library>
