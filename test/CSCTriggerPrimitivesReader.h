@@ -8,8 +8,8 @@
  *
  * \author Slava Valuev, UCLA.
  *
- * $Date: 2008/08/28 13:53:29 $
- * $Revision: 1.12 $
+ * $Date: 2009/03/26 17:39:42 $
+ * $Revision: 1.13 $
  *
  */
 
@@ -34,6 +34,7 @@
 
 #include <TH1.h>
 #include <TH2.h>
+
 
 class CSCGeometry;
 class TFile;
@@ -243,6 +244,14 @@ class CSCTriggerPrimitivesReader : public edm::EDAnalyzer
   TH1F *hEfficALCTEta[MAX_STATIONS], *hEfficCLCTEta[MAX_STATIONS];
   TH1F *hEfficHitsEtaCsc[CSC_TYPES];
   TH1F *hEfficALCTEtaCsc[CSC_TYPES], *hEfficCLCTEtaCsc[CSC_TYPES];
+
+  TH1F *hAlctKeyGroupME11;
+  TH1F *hClctKeyStripME11;
+  TH1F *hLctTMBKeyGroupME11;
+  TH1F *hLctTMBKeyStripME11;
+  TH1F *hLctMPCKeyGroupME11;
+  TH1F *hLctMPCKeyStripME11;
+
 };
 
 #endif

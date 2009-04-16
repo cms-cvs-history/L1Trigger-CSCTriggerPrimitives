@@ -7,8 +7,8 @@
 //
 //   Author List: S. Valuev, UCLA.
 //
-//   $Date: 2009/03/26 17:39:42 $
-//   $Revision: 1.30 $
+//   $Date: 2009/03/27 17:16:05 $
+//   $Revision: 1.31 $
 //
 //   Modifications:
 //
@@ -30,7 +30,8 @@
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 
 // MC particles
-#include <SimDataFormats/GeneratorProducts/interface/HepMCProduct.h>
+//#include <SimDataFormats/GeneratorProducts/interface/HepMCProduct.h>
+#include <SimDataFormats/HepMCProduct/interface/HepMCProduct.h>
 
 // MC tests
 #include <L1Trigger/CSCTriggerPrimitives/test/CSCAnodeLCTAnalyzer.h>
@@ -46,6 +47,10 @@
 #include "TPostScript.h"
 #include "TStyle.h"
 #include "TROOT.h"
+
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+
 
 using namespace std;
 
@@ -101,8 +106,8 @@ CSCTriggerPrimitivesReader::CSCTriggerPrimitivesReader(const edm::ParameterSet& 
   emulLctsIn_ = conf.getParameter<bool>("emulLctsIn");
   isMTCCData_ = conf.getParameter<bool>("isMTCCData");
   isTMB07 = true;
-  plotME1A = false;
-  plotME42 = false;
+  plotME1A = true;
+  plotME42 = true;
   lctProducerData_ = conf.getUntrackedParameter<string>("CSCLCTProducerData",
 							"cscunpacker");
   lctProducerEmul_ = conf.getUntrackedParameter<string>("CSCLCTProducerEmul",
@@ -344,6 +349,9 @@ void CSCTriggerPrimitivesReader::bookALCTHistos() {
   hAlctKeyGroup  = new TH1F("", "ALCT key wiregroup", 120, -0.5, 119.5);
   hAlctBXN       = new TH1F("", "ALCT bx",             20, -0.5,  19.5);
 
+  edm::Service<TFileService> fs;
+  hAlctKeyGroupME11 = fs->make<TH1F>("hAlctKeyGroupME11", "ALCT key wiregroup ME1/1", 50, -0.5, 49.5);
+  
   bookedALCTHistos = true;
 }
 
@@ -385,6 +393,9 @@ void CSCTriggerPrimitivesReader::bookCLCTHistos() {
     hClctKeyStripCsc[i]   = new TH1F("", s2.c_str(), max_ds, 0., max_ds);
   }
 
+  edm::Service<TFileService> fs;
+  hClctKeyStripME11 = fs->make<TH1F>("hClctKeyStripME11","CLCT keystrip, halfstrips ME1/1",161, -0.5, 160.5);
+
   bookedCLCTHistos = true;
 }
 
@@ -424,6 +435,10 @@ void CSCTriggerPrimitivesReader::bookLCTTMBHistos() {
     hLctTMBChamber[istat] = new TH1F("", histname,  10, -0.5, 9.5);
   }
 
+  edm::Service<TFileService> fs;
+  hLctTMBKeyGroupME11  = fs->make<TH1F>("hLctTMBKeyGroupME11", "LCT key wiregroup ME1/1", 50, -0.5, 49.5);
+  hLctTMBKeyStripME11  = fs->make<TH1F>("hLctTMBKeyStripME11", "LCT key strip ME1/1",     161, -0.5, 160.5);
+
   bookedLCTTMBHistos = true;
 }
 
@@ -451,6 +466,10 @@ void CSCTriggerPrimitivesReader::bookLCTMPCHistos() {
     sprintf(histname, "CSCId, station %d", istat+1);
     hLctMPCChamber[istat] = new TH1F("", histname,  10, -0.5, 9.5);
   }
+
+  edm::Service<TFileService> fs;
+  hLctMPCKeyGroupME11  = fs->make<TH1F>("hLctMPCKeyGroupME11", "MPC LCT key wiregroup ME1/1", 50, -0.5, 49.5);
+  hLctMPCKeyStripME11  = fs->make<TH1F>("hLctMPCKeyStripME11", "MPC LCT key strip ME1/1",     161, -0.5, 160.5);
 
   bookedLCTMPCHistos = true;
 }
@@ -664,6 +683,8 @@ void CSCTriggerPrimitivesReader::fillALCTHistos(const CSCALCTDigiCollection* alc
 	int csctype = getCSCType(id);
 	hAlctPerCSC->Fill(csctype);
 	hAlctCsc[id.endcap()-1][csctype]->Fill(id.chamber());
+	
+	if (csctype==0) hAlctKeyGroupME11->Fill((*digiIt).getKeyWG());
 
         nValidALCTs++;
 	nValidALCTsPerCSC++;
@@ -714,6 +735,8 @@ void CSCTriggerPrimitivesReader::fillCLCTHistos(const CSCCLCTDigiCollection* clc
 	int csctype = getCSCType(id);
 	hClctPerCSC->Fill(csctype);
 	hClctCsc[id.endcap()-1][csctype]->Fill(id.chamber());
+	
+	if (striptype==1 && csctype==0) hClctKeyStripME11->Fill(keystrip); 
 
 	int phibend;
 	int pattern = (*digiIt).getPattern();
@@ -747,6 +770,7 @@ void CSCTriggerPrimitivesReader::fillLCTTMBHistos(const CSCCorrelatedLCTDigiColl
   if (!bookedLCTTMBHistos) bookLCTTMBHistos();
 
   int nValidLCTs = 0;
+  bool alct_valid, clct_valid;
   CSCCorrelatedLCTDigiCollection::DigiRangeIterator detUnitIt;
   for (detUnitIt = lcts->begin(); detUnitIt != lcts->end(); detUnitIt++) {
     int nValidLCTsPerCSC = 0;
@@ -768,12 +792,16 @@ void CSCTriggerPrimitivesReader::fillLCTTMBHistos(const CSCCorrelatedLCTDigiColl
         hLctTMBQuality->Fill(quality);
         hLctTMBBXN->Fill((*digiIt).getBX());
 
-	bool alct_valid = (quality != 4 && quality != 5);
+        if (isTMB07) alct_valid = (quality != 0 && quality != 2);
+        else         alct_valid = (quality != 4 && quality != 5);	
+
 	if (alct_valid) {
 	  hLctTMBKeyGroup->Fill((*digiIt).getKeyWG());
 	}
 
-	bool clct_valid = (quality != 1 && quality != 3);
+	if (isTMB07) clct_valid = (quality != 0 && quality != 1);
+        else         clct_valid = (quality != 1 && quality != 3);
+
 	if (clct_valid) {
 	  hLctTMBKeyStrip->Fill((*digiIt).getStrip());
 	  if (!isTMB07) {
@@ -792,6 +820,13 @@ void CSCTriggerPrimitivesReader::fillLCTTMBHistos(const CSCCorrelatedLCTDigiColl
 	hLctTMBCsc[id.endcap()-1][csctype]->Fill(id.chamber());
 	// Truly correlated LCTs; for DAQ
 	if (alct_valid && clct_valid) hCorrLctTMBPerCSC->Fill(csctype); 
+
+	if (alct_valid && csctype==0) {
+	  hLctTMBKeyGroupME11->Fill((*digiIt).getKeyWG());
+	}
+	if (clct_valid && csctype==0) {
+	  hLctTMBKeyStripME11->Fill((*digiIt).getStrip());
+	}
 
         nValidLCTs++;
 	nValidLCTsPerCSC++;
@@ -816,6 +851,7 @@ void CSCTriggerPrimitivesReader::fillLCTMPCHistos(const CSCCorrelatedLCTDigiColl
   if (!bookedLCTMPCHistos) bookLCTMPCHistos();
 
   int nValidLCTs = 0;
+  bool alct_valid, clct_valid;
   CSCCorrelatedLCTDigiCollection::DigiRangeIterator detUnitIt;
   for (detUnitIt = lcts->begin(); detUnitIt != lcts->end(); detUnitIt++) {
     const CSCDetId& id = (*detUnitIt).first;
@@ -836,12 +872,16 @@ void CSCTriggerPrimitivesReader::fillLCTMPCHistos(const CSCCorrelatedLCTDigiColl
         hLctMPCQuality->Fill(quality);
         hLctMPCBXN->Fill((*digiIt).getBX());
 
-	bool alct_valid = (quality != 4 && quality != 5);
+        if (isTMB07) alct_valid = (quality != 0 && quality != 2);
+        else         alct_valid = (quality != 4 && quality != 5);	
+
 	if (alct_valid) {
 	  hLctMPCKeyGroup->Fill((*digiIt).getKeyWG());
 	}
 
-	bool clct_valid = (quality != 1 && quality != 3);
+	if (isTMB07) clct_valid = (quality != 0 && quality != 1);
+        else         clct_valid = (quality != 1 && quality != 3);
+
 	if (clct_valid) {
 	  hLctMPCKeyStrip->Fill((*digiIt).getStrip());
 	  if (!isTMB07) {
@@ -859,6 +899,13 @@ void CSCTriggerPrimitivesReader::fillLCTMPCHistos(const CSCCorrelatedLCTDigiColl
 	hLctMPCPerCSC->Fill(csctype);
 	// Truly correlated LCTs; for DAQ
 	if (alct_valid && clct_valid) hCorrLctMPCPerCSC->Fill(csctype); 
+
+	if (alct_valid && csctype==0) {
+	  hLctMPCKeyGroupME11->Fill((*digiIt).getKeyWG());
+	}
+	if (clct_valid && csctype==0) {
+	  hLctMPCKeyStripME11->Fill((*digiIt).getStrip());
+	}
 
         nValidLCTs++;
 
