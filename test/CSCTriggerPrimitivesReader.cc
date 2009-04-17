@@ -7,8 +7,8 @@
 //
 //   Author List: S. Valuev, UCLA.
 //
-//   $Date: 2009/03/27 17:16:05 $
-//   $Revision: 1.31 $
+//   $Date: 2009/04/16 00:52:45 $
+//   $Revision: 1.31.2.1 $
 //
 //   Modifications:
 //
@@ -771,6 +771,7 @@ void CSCTriggerPrimitivesReader::fillLCTTMBHistos(const CSCCorrelatedLCTDigiColl
 
   int nValidLCTs = 0;
   bool alct_valid, clct_valid;
+
   CSCCorrelatedLCTDigiCollection::DigiRangeIterator detUnitIt;
   for (detUnitIt = lcts->begin(); detUnitIt != lcts->end(); detUnitIt++) {
     int nValidLCTsPerCSC = 0;
@@ -792,16 +793,14 @@ void CSCTriggerPrimitivesReader::fillLCTTMBHistos(const CSCCorrelatedLCTDigiColl
         hLctTMBQuality->Fill(quality);
         hLctTMBBXN->Fill((*digiIt).getBX());
 
-        if (isTMB07) alct_valid = (quality != 0 && quality != 2);
-        else         alct_valid = (quality != 4 && quality != 5);	
-
+	if (isTMB07) alct_valid = (quality != 0 && quality != 2);
+	else         alct_valid = (quality != 4 && quality != 5);
 	if (alct_valid) {
 	  hLctTMBKeyGroup->Fill((*digiIt).getKeyWG());
 	}
 
 	if (isTMB07) clct_valid = (quality != 0 && quality != 1);
-        else         clct_valid = (quality != 1 && quality != 3);
-
+	else         clct_valid = (quality != 1 && quality != 3);
 	if (clct_valid) {
 	  hLctTMBKeyStrip->Fill((*digiIt).getStrip());
 	  if (!isTMB07) {
@@ -852,6 +851,7 @@ void CSCTriggerPrimitivesReader::fillLCTMPCHistos(const CSCCorrelatedLCTDigiColl
 
   int nValidLCTs = 0;
   bool alct_valid, clct_valid;
+
   CSCCorrelatedLCTDigiCollection::DigiRangeIterator detUnitIt;
   for (detUnitIt = lcts->begin(); detUnitIt != lcts->end(); detUnitIt++) {
     const CSCDetId& id = (*detUnitIt).first;
@@ -872,16 +872,14 @@ void CSCTriggerPrimitivesReader::fillLCTMPCHistos(const CSCCorrelatedLCTDigiColl
         hLctMPCQuality->Fill(quality);
         hLctMPCBXN->Fill((*digiIt).getBX());
 
-        if (isTMB07) alct_valid = (quality != 0 && quality != 2);
-        else         alct_valid = (quality != 4 && quality != 5);	
-
+	if (isTMB07) alct_valid = (quality != 0 && quality != 2);
+	else         alct_valid = (quality != 4 && quality != 5);
 	if (alct_valid) {
 	  hLctMPCKeyGroup->Fill((*digiIt).getKeyWG());
 	}
 
 	if (isTMB07) clct_valid = (quality != 0 && quality != 1);
-        else         clct_valid = (quality != 1 && quality != 3);
-
+	else         clct_valid = (quality != 1 && quality != 3);
 	if (clct_valid) {
 	  hLctMPCKeyStrip->Fill((*digiIt).getStrip());
 	  if (!isTMB07) {

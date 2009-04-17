@@ -13,7 +13,7 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
     # Parameters common for all boards
     commonParam = cms.PSet(
         isTMB07 = cms.bool(True),
-        isMTCC = cms.bool(True)
+        isMTCC = cms.bool(False)
     ),
 
     # Parameters for ALCT processors: old MC studies
@@ -104,7 +104,10 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
     ),
 
     tmbParam = cms.PSet(
-        mpcBlockMe1a = cms.uint32(1),
+        mpcBlockMe1a    = cms.uint32(1),
+        alctTrigEnable  = cms.uint32(0),
+        clctTrigEnable  = cms.uint32(0),
+        matchTrigEnable = cms.uint32(1),
         # Debug
         verbosity = cms.untracked.int32(0)
     )
