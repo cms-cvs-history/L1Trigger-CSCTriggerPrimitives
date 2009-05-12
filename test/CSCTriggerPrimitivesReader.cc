@@ -7,8 +7,8 @@
 //
 //   Author List: S. Valuev, UCLA.
 //
-//   $Date: 2009/04/16 00:52:45 $
-//   $Revision: 1.31.2.1 $
+//   $Date: 2009/05/01 16:10:23 $
+//   $Revision: 1.33 $
 //
 //   Modifications:
 //
@@ -112,6 +112,8 @@ CSCTriggerPrimitivesReader::CSCTriggerPrimitivesReader(const edm::ParameterSet& 
 							"cscunpacker");
   lctProducerEmul_ = conf.getUntrackedParameter<string>("CSCLCTProducerEmul",
 							"cscTriggerPrimitiveDigis");
+
+  simHitProducer_ = conf.getParameter<edm::InputTag>("CSCSimHitProducer");
   wireDigiProducer_ = conf.getParameter<edm::InputTag>("CSCWireDigiProducer");
   compDigiProducer_ = conf.getParameter<edm::InputTag>("CSCComparatorDigiProducer");
   debug = conf.getUntrackedParameter<bool>("debug", false);
@@ -1442,7 +1444,8 @@ void CSCTriggerPrimitivesReader::MCStudies(const edm::Event& ev,
 		  wireDigis);
     ev.getByLabel(compDigiProducer_.label(), compDigiProducer_.instance(),
 		  compDigis);
-    ev.getByLabel("g4SimHits", "MuonCSCHits", simHits);
+    ev.getByLabel(simHitProducer_.label(), simHitProducer_.instance(),
+		  simHits);
     if (debug) LogTrace("CSCTriggerPrimitivesReader")
       << "   #CSC SimHits: " << simHits->size();
 
