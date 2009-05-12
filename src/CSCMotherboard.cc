@@ -27,8 +27,8 @@
 //                Based on code by Nick Wisniewski (nw@its.caltech.edu)
 //                and a framework by Darin Acosta (acosta@phys.ufl.edu).
 //
-//   $Date: 2009/04/10 14:44:06 $
-//   $Revision: 1.23 $
+//   $Date: 2009/04/23 13:49:15 $
+//   $Revision: 1.25 $
 //
 //   Modifications: Numerous later improvements by Jason Mumford and
 //                  Slava Valuev (see cvs in ORCA).
@@ -46,6 +46,7 @@ const unsigned int CSCMotherboard::def_mpc_block_me1a    = 1;
 const unsigned int CSCMotherboard::def_alct_trig_enable  = 0;
 const unsigned int CSCMotherboard::def_clct_trig_enable  = 0;
 const unsigned int CSCMotherboard::def_match_trig_enable = 1;
+const unsigned int CSCMotherboard::def_match_trig_window_size = 7;
 
 CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
 			       unsigned sector, unsigned subsector,
@@ -97,6 +98,8 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
   alct_trig_enable  = tmbParams.getParameter<unsigned int>("alctTrigEnable");
   clct_trig_enable  = tmbParams.getParameter<unsigned int>("clctTrigEnable");
   match_trig_enable = tmbParams.getParameter<unsigned int>("matchTrigEnable");
+  match_trig_window_size =
+    tmbParams.getParameter<unsigned int>("matchTrigWindowSize");
 
   infoV          = tmbParams.getUntrackedParameter<int>("verbosity", 0);
 
@@ -127,6 +130,7 @@ CSCMotherboard::CSCMotherboard() :
   alct_trig_enable  = def_alct_trig_enable;
   clct_trig_enable  = def_clct_trig_enable;
   match_trig_enable = def_match_trig_enable;
+  match_trig_window_size = def_match_trig_window_size;
 
   infoV = 2;
 
@@ -165,6 +169,7 @@ void CSCMotherboard::checkConfigParameters() {
   static const unsigned int max_alct_trig_enable  = 1 << 1;
   static const unsigned int max_clct_trig_enable  = 1 << 1;
   static const unsigned int max_match_trig_enable = 1 << 1;
+  static const unsigned int max_match_trig_window_size = 1 << 4;
 
   // Checks.
   if (mpc_block_me1a >= max_mpc_block_me1a) {
@@ -199,6 +204,14 @@ void CSCMotherboard::checkConfigParameters() {
       << def_match_trig_enable << " +++\n";
     match_trig_enable = def_match_trig_enable;
   }
+  if (match_trig_window_size >= max_match_trig_window_size) {
+    if (infoV > 0) edm::LogError("CSCMotherboard")
+      << "+++ Value of match_trig_window_size, " << match_trig_window_size
+      << ", exceeds max allowed, " << max_match_trig_window_size-1 << " +++\n"
+      << "+++ Try to proceed with the default value, match_trig_window_size="
+      << def_match_trig_window_size << " +++\n";
+    match_trig_window_size = def_match_trig_window_size;
+  }
 }
 
 void CSCMotherboard::run(
@@ -210,19 +223,36 @@ void CSCMotherboard::run(
   alct->run(time1);               // run anode LCT
   clct->run(triad, time2, time2); // run cathodeLCT
 
-  int first_bx = CSCAnodeLCTProcessor::MAX_ALCT_BINS;
-  for (int bx = 0; bx < CSCAnodeLCTProcessor::MAX_ALCT_BINS; bx++) {
-    if (alct->bestALCT[bx].isValid()) {first_bx = bx; break;}
+  if (clct->bestCLCT.isValid()) {
+    bool is_matched = false;
+    int bx_clct = clct->bestCLCT.getBX();
+    int bx_alct_start = bx_clct - match_trig_window_size/2;
+    int bx_alct_stop  = bx_clct + match_trig_window_size/2;
+    for (int bx = bx_alct_start; bx <= bx_alct_stop; bx++) {
+      if (bx < 0 && bx >= CSCAnodeLCTProcessor::MAX_ALCT_BINS) continue;
+      if (alct->bestALCT[bx].isValid()) {
+	correlateLCTs(alct->bestALCT[bx], alct->secondALCT[bx],
+		      clct->bestCLCT, clct->secondCLCT);
+	is_matched = true;
+	break;
+      }
+    }
+    // No ALCT within the match time interval found: report CLCT-only LCT
+    // (use dummy ALCTs).
+    if (!is_matched) {
+      correlateLCTs(alct->bestALCT[0], alct->secondALCT[0],
+		    clct->bestCLCT, clct->secondCLCT);
+    }
   }
-  // Valid ALCT
-  if (first_bx < CSCAnodeLCTProcessor::MAX_ALCT_BINS) {
-    correlateLCTs(alct->bestALCT[first_bx], alct->secondALCT[first_bx],
-		  clct->bestCLCT, clct->secondCLCT);
-  }
-  // Valid CLCT: use dummy ALCT
-  else if (clct->bestCLCT.isValid()) {
-    correlateLCTs(alct->bestALCT[0], alct->secondALCT[0],
-		  clct->bestCLCT, clct->secondCLCT);
+  // No valid CLCTs; attempt to make ALCT-only LCT.  Use the earlest
+  // valid ALCTs.
+  else {
+    for (int bx = 0; bx < CSCAnodeLCTProcessor::MAX_ALCT_BINS; bx++) {
+      if (alct->bestALCT[bx].isValid()) {
+	correlateLCTs(alct->bestALCT[bx], alct->secondALCT[bx],
+		      clct->bestCLCT, clct->secondCLCT);
+      }
+    }
   }
 }
 
@@ -244,24 +274,49 @@ CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
       std::vector<CSCCLCTDigi> clctV = clct->run(compdc); // run cathodeLCT
     }
 
-    // It may seem like the next function should be
-    // 'if (alct->bestALCT.isValid() && clct->bestCLCT.isValid())'.
-    // It is || instead of && because the decision to reject non-valid LCTs
-    // is handled further upstream (assuming at least 1 is valid).  -JM
-    int first_bx = CSCAnodeLCTProcessor::MAX_ALCT_BINS;
-    for (int bx = 0; bx < CSCAnodeLCTProcessor::MAX_ALCT_BINS; bx++) {
-      if (alct->bestALCT[bx].isValid()) {first_bx = bx; break;}
+    // There should be at least one valid ALCT or CLCT for a correlated LCT
+    // to be formed.  Decision on whether to reject non-complete LCTs (and
+    // if yes of which type) is made further upstream.
+    if (clct->bestCLCT.isValid()) {
+      // Look for ALCTs within the match-time window.  The window is
+      // centered at the CLCT bx; therefore, we make an assumption
+      // that anode and cathode hits are perfectly synchronized.  This
+      // is always true for MC, but only an approximation when the
+      // data is analyzed (which works fairly good as long as wide
+      // windows are used).  To get rid of this assumption, one would
+      // need to access "full BX" words, which are not readily
+      // available.
+      bool is_matched = false;
+      int bx_clct = clct->bestCLCT.getBX();
+      int bx_alct_start = bx_clct - match_trig_window_size/2;
+      int bx_alct_stop  = bx_clct + match_trig_window_size/2;
+      for (int bx = bx_alct_start; bx <= bx_alct_stop; bx++) {
+	if (bx < 0 && bx >= CSCAnodeLCTProcessor::MAX_ALCT_BINS) continue;
+	if (alct->bestALCT[bx].isValid()) {
+	  correlateLCTs(alct->bestALCT[bx], alct->secondALCT[bx],
+			clct->bestCLCT, clct->secondCLCT);
+	  is_matched = true;
+	  break;
+	}
+      }
+      // No ALCT within the match time interval found: report CLCT-only LCT
+      // (use dummy ALCTs).
+      if (!is_matched) {
+	correlateLCTs(alct->bestALCT[0], alct->secondALCT[0],
+		      clct->bestCLCT, clct->secondCLCT);
+      }
     }
-    // Valid ALCT
-    if (first_bx < CSCAnodeLCTProcessor::MAX_ALCT_BINS) {
-      correlateLCTs(alct->bestALCT[first_bx], alct->secondALCT[first_bx],
-		    clct->bestCLCT, clct->secondCLCT);
+    // No valid CLCTs; attempt to make ALCT-only LCT.  Use the earlest
+    // valid ALCTs.
+    else {
+      for (int bx = 0; bx < CSCAnodeLCTProcessor::MAX_ALCT_BINS; bx++) {
+	if (alct->bestALCT[bx].isValid()) {
+	  correlateLCTs(alct->bestALCT[bx], alct->secondALCT[bx],
+			clct->bestCLCT, clct->secondCLCT);
+	}
+      }
     }
-    // Valid CLCT: use dummy ALCT
-    else if (clct->bestCLCT.isValid()) {
-      correlateLCTs(alct->bestALCT[0], alct->secondALCT[0],
-		    clct->bestCLCT, clct->secondCLCT);
-    }
+
     if (infoV > 0) {
       if (firstLCT.isValid())  LogDebug("CSCMotherboard") << firstLCT;
       if (secondLCT.isValid()) LogDebug("CSCMotherboard") << secondLCT;
@@ -311,10 +366,6 @@ void CSCMotherboard::correlateLCTs(CSCALCTDigi bestALCT,
   bool cathodeBestValid   = bestCLCT.isValid();
   bool cathodeSecondValid = secondCLCT.isValid();
 
-  // determine STA value; obsolete as of April 2002.
-  // int tempSTA = findSTA(anodeBestValid, anodeSecondValid,
-  //                       cathodeBestValid, cathodeSecondValid);
-
   if (anodeBestValid && !anodeSecondValid)     secondALCT = bestALCT;
   if (!anodeBestValid && anodeSecondValid)     bestALCT   = secondALCT;
   if (cathodeBestValid && !cathodeSecondValid) secondCLCT = bestCLCT;
@@ -347,9 +398,6 @@ CSCCorrelatedLCTDigi CSCMotherboard::constructLCTs(const CSCALCTDigi& aLCT,
 
   // LCT quality number
   unsigned int quality = findQuality(aLCT, cLCT);
-
-  // bunch crossing match; obsolete as of April 2002.
-  // int bxnMatch = findBxnMatch(aLCT.getBX(), cLCT.getBX());
 
   // Bunch crossing: get it from cathode LCT if anode LCT is not there.
   int bx = aLCT.isValid() ? aLCT.getBX() : cLCT.getBX();
@@ -505,57 +553,6 @@ unsigned int CSCMotherboard::findQuality(const CSCALCTDigi& aLCT,
   return quality;
 }
 
-// STA is a status word for the ALCTs and CLCTs.  -JM
-// In the latest TMB design this word is no longer present /SV, 03-Apr-02/.
-int CSCMotherboard::findSTA(const bool a1, const bool a2,
-			    const bool c1, const bool c2) {
-  int STA = 0; // if no incoming LCTs
-
-  if (a1 && a2 && !c1 && !c2)        // if 2 anode LCTs and 0 cathode LCTs
-      STA = 1;
-  else if (!a1 && !a2 && c1 && c2)   // if 2 cathode LCTs and 0 anode LCTs
-      STA = 1;
-  else if (!a1 && a2 && c1 && !c2)   // if ambiguous LCTs
-      STA = 1;
-  else if (a1 && !a2 && !c1 && c2)   // if ambiguous LCTs
-      STA = 1;
-  else if (!a1 && a2 && !c1 && c2)   // if ambiguous LCTs
-      STA = 1;
-  else if (a1 && !a2 && c1 && c2)    // if 1 anode and 2 cathodes exist...
-      STA = 2;
-  else if (!a1 && a2 && c1 && c2)
-      STA = 1;
-  else if (a1 && a2 && c1 && !c2)    // if 2 anodes and 1 cathode exist...
-      STA = 2;
-  else if (a1 && a2 && !c1 && c2)
-      STA = 1;
-  else if (a1 && !a2 && c1 && !c2)   // if one unambiguous muon
-      STA = 3;
-  else if (a1 && a2 && c1 && c2)     // if two unambiguous muons
-      STA = 3;
-  else if (a1 || a2 || c1 || c2 )    // if only 1 LCT
-      STA = 1;
-  else {
-    if (infoV > 0) edm::LogWarning("CSCMotherboard")
-      << "+++ findSTA: STA not assigned: \n"
-      << " a1 " << a1 << " a2 " << a2 << " c1 " << c1 << " c2 " << c2
-      << " +++ \n";
-  }
-
-  return STA;
-}
-
-// Cathode-Anode bxn match, as defined in Trigger TDR.
-// This word is not present in the TMB-02 design /SV, 03-Apr-02/.
-int CSCMotherboard::findBxnMatch(const int aBxn, const int cBxn) {
-  int bxnMatch = 3; // worst case scenario
-
-  if (aBxn == cBxn) {bxnMatch = 0;} // perfect match
-  else if ((aBxn - cBxn) == 1) {bxnMatch = 1;}
-  else if ((cBxn - aBxn) == 1) {bxnMatch = 2;}
-  return bxnMatch;
-}
-
 void CSCMotherboard::testLCT() {
   unsigned int lctPattern, lctQuality;
   for (int pattern = 0; pattern < 8; pattern++) {
@@ -628,6 +625,8 @@ void CSCMotherboard::dumpConfigParams() const {
        << clct_trig_enable << "\n";
   strm << " match_trig_enable [allow matched ALCT-CLCT triggers] = "
        << match_trig_enable << "\n";
+  strm << " match_trig_window_size [ALCT-CLCT match window width] = "
+       << match_trig_window_size << "\n";
   strm << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
   LogDebug("CSCMotherboard") << strm.str();
 }

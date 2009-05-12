@@ -31,8 +31,8 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Date: 2009/04/02 14:59:12 $
- * $Revision: 1.10 $
+ * $Date: 2009/04/23 13:49:15 $
+ * $Revision: 1.12 $
  *
  */
 
@@ -101,11 +101,12 @@ class CSCMotherboard
   /** Configuration parameters. */
   unsigned int mpc_block_me1a;
   unsigned int alct_trig_enable, clct_trig_enable, match_trig_enable;
+  unsigned int match_trig_window_size;
 
   /** Default values of configuration parameters. */
   static const unsigned int def_mpc_block_me1a;
   static const unsigned int def_alct_trig_enable, def_clct_trig_enable;
-  static const unsigned int def_match_trig_enable;
+  static const unsigned int def_match_trig_enable, def_match_trig_window_size;
 
   /** Container for first correlated LCT. */
   CSCCorrelatedLCTDigi firstLCT;
@@ -122,10 +123,6 @@ class CSCMotherboard
 				     const CSCCLCTDigi& cLCT);
   unsigned int encodePattern(const int ptn, const int highPt);
   unsigned int findQuality(const CSCALCTDigi& aLCT, const CSCCLCTDigi& cLCT);
-
-  // Obsolete methods
-  int findSTA(const bool, const bool, const bool, const bool);
-  int findBxnMatch(const int aBxn, const int cBxn);
 
   /** Dump TMB/MPC configuration parameters. */
   void dumpConfigParams() const;
