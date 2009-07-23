@@ -11,7 +11,7 @@
  * The output is up to two Correlated LCTs.
  *
  * It can be run in either a test mode, where the arguments are a collection
- * of wire times and arrays of comparator times & comparator results, or
+ * of wire times and arrays of halfstrip and distrip times, or
  * for general use, with wire digi and comparator digi collections as
  * arguments.  In the latter mode, the wire & strip info is passed on the
  * LCTProcessors, where it is decoded and converted into a convenient form.
@@ -31,8 +31,8 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Date: 2009/04/23 13:49:15 $
- * $Revision: 1.12 $
+ * $Date: 2009/05/15 16:37:50 $
+ * $Revision: 1.14 $
  *
  */
 
@@ -55,16 +55,19 @@ class CSCMotherboard
   ~CSCMotherboard();
 
   /** Test version of run function. */
-  void run(std::vector<int> time1[CSCConstants::NUM_LAYERS][CSCConstants::MAX_NUM_WIRES],
-	   int time2[CSCConstants::NUM_LAYERS][CSCConstants::MAX_NUM_STRIPS],
-	   int triad[CSCConstants::NUM_LAYERS][CSCConstants::MAX_NUM_STRIPS]);
+  void run(const std::vector<int> w_time[CSCConstants::NUM_LAYERS][CSCConstants::MAX_NUM_WIRES],
+	   const std::vector<int> hs_times[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS],
+	   const std::vector<int> ds_times[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS]);
 
   /** Run function for normal usage.  Runs cathode and anode LCT processors,
       takes results and correlates into CorrelatedLCT. */
   std::vector<CSCCorrelatedLCTDigi> run(const CSCWireDigiCollection* wiredc,
 				    const CSCComparatorDigiCollection* compdc);
 
-  /** Returns vector of found correlated LCTs, if any. */
+  /** Returns vector of correlated LCTs in the read-out time window, if any. */
+  std::vector<CSCCorrelatedLCTDigi> readoutLCTs();
+
+  /** Returns vector of all found correlated LCTs, if any. */
   std::vector<CSCCorrelatedLCTDigi> getLCTs();
 
   /** Clears correlated LCT and passes clear signal on to cathode and anode
@@ -80,7 +83,9 @@ class CSCMotherboard
   /** Cathode LCT processor. */
   CSCCathodeLCTProcessor* clct;
 
- private:
+ // VK: change to protected, to allow inheritance
+ protected:
+ //private:
   /** Verbosity level: 0: no print (default).
    *                   1: print LCTs found. */
   int infoV;
@@ -98,21 +103,40 @@ class CSCMotherboard
   /** Flag for new (2007) version of TMB firmware. */
   bool isTMB07;
 
+  /** VK: Flag for SLHC studies. */
+  bool isSLHC;
+
   /** Configuration parameters. */
   unsigned int mpc_block_me1a;
   unsigned int alct_trig_enable, clct_trig_enable, match_trig_enable;
-  unsigned int match_trig_window_size;
+  unsigned int match_trig_window_size, tmb_l1a_window_size;
+
+  /** VK: special configuration parameters for ME11 treatment. */
+  bool naiveME1aME1b, smartME1aME1b, disableME1a;
+
+  /** VK: separate handle for early time bins */
+  unsigned int early_tbins_my;
+  
+  /** VK: wether to readout only the earliest two LCTs in readout window */
+  bool readout_earliest_2;
+
+  /** VK: maximum lcts per BX in ME11: either 2 or 4 */
+  unsigned int max_me11_lcts;
 
   /** Default values of configuration parameters. */
   static const unsigned int def_mpc_block_me1a;
   static const unsigned int def_alct_trig_enable, def_clct_trig_enable;
   static const unsigned int def_match_trig_enable, def_match_trig_window_size;
+  static const unsigned int def_tmb_l1a_window_size;
+
+  /** Maximum number of time bins. */
+  enum {MAX_LCT_BINS = 16};
 
   /** Container for first correlated LCT. */
-  CSCCorrelatedLCTDigi firstLCT;
+  CSCCorrelatedLCTDigi firstLCT[MAX_LCT_BINS];
 
   /** Container for second correlated LCT. */
-  CSCCorrelatedLCTDigi secondLCT;
+  CSCCorrelatedLCTDigi secondLCT[MAX_LCT_BINS];
 
   /** Make sure that the parameter values are within the allowed range. */
   void checkConfigParameters();

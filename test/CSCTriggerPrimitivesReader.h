@@ -8,8 +8,8 @@
  *
  * \author Slava Valuev, UCLA.
  *
- * $Date: 2009/05/01 16:10:23 $
- * $Revision: 1.14 $
+ * $Date: 2009/05/20 15:01:34 $
+ * $Revision: 1.15 $
  *
  */
 
@@ -35,8 +35,8 @@
 #include <TH1.h>
 #include <TH2.h>
 
-
 class CSCGeometry;
+class CSCBadChambers;
 class TFile;
 
 class CSCTriggerPrimitivesReader : public edm::EDAnalyzer
@@ -61,6 +61,9 @@ class CSCTriggerPrimitivesReader : public edm::EDAnalyzer
 
   // Cache geometry for current event
   const CSCGeometry* geom_;
+
+  // Cache conditions data for bad chambers
+  const CSCBadChambers* badChambers_;
 
   // Define which LCTs are present in the input file.  This will determine the
   // workflow of the Reader.
@@ -252,7 +255,6 @@ class CSCTriggerPrimitivesReader : public edm::EDAnalyzer
   TH1F *hLctTMBKeyStripME11;
   TH1F *hLctMPCKeyGroupME11;
   TH1F *hLctMPCKeyStripME11;
-
 };
 
 #endif

@@ -7,8 +7,8 @@
 //
 //   Author List: S. Valuev, UCLA.
 //
-//   $Date: 2008/10/09 11:09:22 $
-//   $Revision: 1.6 $
+//   $Date: 2009/05/20 15:00:02 $
+//   $Revision: 1.9 $
 //
 //   Modifications:
 //
@@ -17,13 +17,14 @@
 #include <L1Trigger/CSCTriggerPrimitives/plugins/CSCTriggerPrimitivesProducer.h>
 #include <L1Trigger/CSCTriggerPrimitives/src/CSCTriggerPrimitivesBuilder.h>
 
-#include <Utilities/Timing/interface/TimingReport.h>
+//#include <Utilities/Timing/interface/TimingReport.h>
 #include <DataFormats/Common/interface/Handle.h>
 #include <FWCore/Framework/interface/ESHandle.h>
 #include <FWCore/MessageLogger/interface/MessageLogger.h> 
 
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
 #include <L1Trigger/CSCCommonTrigger/interface/CSCTriggerGeometry.h>
+#include <CondFormats/DataRecord/interface/CSCBadChambersRcd.h>
 
 #include <DataFormats/CSCDigi/interface/CSCComparatorDigiCollection.h>
 #include <DataFormats/CSCDigi/interface/CSCWireDigiCollection.h>
@@ -40,6 +41,8 @@ CSCTriggerPrimitivesProducer::CSCTriggerPrimitivesProducer(const edm::ParameterS
 
   wireDigiProducer_ = conf.getParameter<edm::InputTag>("CSCWireDigiProducer");
   compDigiProducer_ = conf.getParameter<edm::InputTag>("CSCComparatorDigiProducer");
+
+  readBadChambers_ = conf.getUntrackedParameter<bool>("readBadChambers",false);
 
   lctBuilder_ = new CSCTriggerPrimitivesBuilder(conf); // pass on the conf
 
@@ -70,9 +73,18 @@ void CSCTriggerPrimitivesProducer::produce(edm::Event& ev,
 
   // Find the geometry (& conditions?) for this event & cache it in 
   // CSCTriggerGeometry.
-  edm::ESHandle<CSCGeometry> h;
-  setup.get<MuonGeometryRecord>().get(h);
-  CSCTriggerGeometry::setGeometry(h);
+  {
+    //static TimingReport::Item & geomTimer =
+    //  (*TimingReport::current())["CSCTriggerPrimitivesProducer:geom"];
+    //TimeMe t(geomTimer, false);
+    edm::ESHandle<CSCGeometry> h;
+    setup.get<MuonGeometryRecord>().get(h);
+    CSCTriggerGeometry::setGeometry(h);
+  }
+
+  // Find conditions data for bad chambers.
+  edm::ESHandle<CSCBadChambers> pBadChambers;
+  if (readBadChambers_) setup.get<CSCBadChambersRcd>().get(pBadChambers);
 
   // Get config. parameters using EventSetup mechanism.  This must be done
   // in produce() for every event and not in beginJob() (see mail from
@@ -101,8 +113,14 @@ void CSCTriggerPrimitivesProducer::produce(edm::Event& ev,
   std::auto_ptr<CSCCorrelatedLCTDigiCollection> oc_sorted_lct(new CSCCorrelatedLCTDigiCollection);
 
   // Fill collections.
-  lctBuilder_->build(wireDigis.product(), compDigis.product(),
-		     *oc_alct, *oc_clct, *oc_lct, *oc_sorted_lct);
+  {
+    //static TimingReport::Item & buildTimer =
+    //  (*TimingReport::current())["CSCTriggerPrimitivesBuilder:build"];
+    //TimeMe t(buildTimer, false);
+    lctBuilder_->build(pBadChambers.product(),
+		       wireDigis.product(), compDigis.product(),
+		       *oc_alct, *oc_clct, *oc_lct, *oc_sorted_lct);
+  }
 
   // Put collections in event.
   ev.put(oc_alct);

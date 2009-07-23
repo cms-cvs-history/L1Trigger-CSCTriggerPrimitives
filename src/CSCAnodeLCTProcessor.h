@@ -13,8 +13,8 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Date: 2009/03/26 15:32:51 $
- * $Revision: 1.17 $
+ * $Date: 2009/05/15 16:29:52 $
+ * $Revision: 1.19 $
  *
  */
 
@@ -68,8 +68,14 @@ class CSCAnodeLCTProcessor
   /** Second best LCTs in this chamber, as found by the processor. */
   CSCALCTDigi secondALCT[MAX_ALCT_BINS];
 
-  /** Returns vector of found ALCTs, if any. */
+  /** Returns vector of ALCTs in the read-out time window, if any. */
+  std::vector<CSCALCTDigi> readoutALCTs();
+
+  /** Returns vector of all found ALCTs, if any. */
   std::vector<CSCALCTDigi> getALCTs();
+  
+  /** VK: set ring number. Important only for ME1a */
+  void setRing(unsigned r) {theRing = r;}
 
   /** Pre-defined patterns. */
   enum {NUM_PATTERN_WIRES = 14};
@@ -91,6 +97,9 @@ class CSCAnodeLCTProcessor
   const unsigned theSubsector;
   const unsigned theTrigChamber;
 
+  /** VK: ring number. Only matters for ME1a */
+  unsigned theRing;
+
   int numWireGroups;
   int MESelection;
 
@@ -110,6 +119,15 @@ class CSCAnodeLCTProcessor
   unsigned int nplanes_hit_pretrig, nplanes_hit_accel_pretrig;
   unsigned int nplanes_hit_pattern, nplanes_hit_accel_pattern;
   unsigned int trig_mode, accel_mode, l1a_window_width;
+  
+  /** VK: awkward workaround to be able to set values by config file */
+  unsigned int hit_persist_my, nplanes_hit_pretrig_my, l1a_window_width_my;
+
+  /** VK: special configuration parameters for ME1a treatment */
+  bool naiveME1aME1b, smartME1aME1b, disableME1a;
+
+  /** VK: separate handle for early time bins */
+  unsigned int early_tbins_my;
 
   /** Default values of configuration parameters. */
   static const unsigned int def_fifo_tbins, def_fifo_pretrig;

@@ -7,8 +7,8 @@
 //
 //   Author List: S. Valuev, UCLA.
 //
-//   $Date: 2009/05/01 16:10:23 $
-//   $Revision: 1.33 $
+//   $Date: 2009/05/20 15:01:34 $
+//   $Revision: 1.34 $
 //
 //   Modifications:
 //
@@ -28,6 +28,9 @@
 #include <FWCore/MessageLogger/interface/MessageLogger.h>
 
 #include <Geometry/Records/interface/MuonGeometryRecord.h>
+
+#include "CondFormats/CSCObjects/interface/CSCBadChambers.h"
+#include "CondFormats/DataRecord/interface/CSCBadChambersRcd.h"
 
 // MC particles
 //#include <SimDataFormats/GeneratorProducts/interface/HepMCProduct.h>
@@ -50,7 +53,6 @@
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
-
 
 using namespace std;
 
@@ -150,6 +152,14 @@ void CSCTriggerPrimitivesReader::analyze(const edm::Event& ev,
   setup.get<MuonGeometryRecord>().get(cscGeom);
   geom_ = &*cscGeom;
 
+  // Find conditions data for bad chambers & cache it.  Needed for efficiency
+  // calculations.
+  /*
+  edm::ESHandle<CSCBadChambers> pBad;
+  setup.get<CSCBadChambersRcd>().get(pBad);
+  badChambers_=pBad.product();
+  */
+  
   // Get the collections of ALCTs, CLCTs, and correlated LCTs from event.
   edm::Handle<CSCALCTDigiCollection> alcts_data;
   edm::Handle<CSCCLCTDigiCollection> clcts_data;
@@ -221,56 +231,48 @@ void CSCTriggerPrimitivesReader::endJob() {
   //theFile->Close();
 
   // Job summary.
-  edm::LogInfo("CSCTriggerPrimitivesReader")
-    << "\n  Average number of ALCTs/event = "
+  cerr<< "\n  Average number of ALCTs/event = "
     << static_cast<float>(numALCT)/eventsAnalyzed << endl;
-  edm::LogInfo("CSCTriggerPrimitivesReader")
-    << "  Average number of CLCTs/event = "
+  cerr<< "  Average number of CLCTs/event = "
     << static_cast<float>(numCLCT)/eventsAnalyzed << endl;
-  edm::LogInfo("CSCTriggerPrimitivesReader")
-    << "  Average number of TMB LCTs/event = "
+  cerr<< "  Average number of TMB LCTs/event = "
     << static_cast<float>(numLCTTMB)/eventsAnalyzed << endl;
-  edm::LogInfo("CSCTriggerPrimitivesReader")
-    << "  Average number of MPC LCTs/event = "
+  cerr<< "  Average number of MPC LCTs/event = "
     << static_cast<float>(numLCTMPC)/eventsAnalyzed << endl;
 
   if (bookedEfficHistos) {
     {
-      edm::LogInfo("CSCTriggerPrimitivesReader") << "\n  ALCT efficiencies:";
+      cerr << "\n  ALCT efficiencies:\n";
       double tot_simh = 0.0, tot_alct = 0.0;
       for (int idh = 0; idh < CSC_TYPES; idh++) {
 	double simh = hEfficHitsEtaCsc[idh]->Integral();
 	double alct = hEfficALCTEtaCsc[idh]->Integral();
 	double eff  = 0.;
 	if (simh > 0) eff = alct/simh;
-	edm::LogInfo("CSCTriggerPrimitivesReader")
-	  << "    " << csc_type[idh]
-	  << ": alct = " << alct << ", simh = " << simh << " eff = " << eff;
+	cerr << "    " << csc_type[idh]
+	  << ": alct = " << alct << ", simh = " << simh << " eff = " << eff<<endl;
 	tot_simh += simh;
 	tot_alct += alct;
       }
-      edm::LogInfo("CSCTriggerPrimitivesReader")
-	<< "    overall: alct = " << tot_alct << ", simh = " << tot_simh
-	<< " eff = " << tot_alct/tot_simh;
+      cerr<< "    overall: alct = " << tot_alct << ", simh = " << tot_simh
+	<< " eff = " << tot_alct/tot_simh<<endl;
     }
 
     {
-      edm::LogInfo("CSCTriggerPrimitivesReader") << "\n  CLCT efficiencies:";
+      cerr << "\n  CLCT efficiencies:\n";
       double tot_simh = 0.0, tot_clct = 0.0;
       for (int idh = 0; idh < CSC_TYPES; idh++) {
 	double simh = hEfficHitsEtaCsc[idh]->Integral();
 	double clct = hEfficCLCTEtaCsc[idh]->Integral();
 	double eff  = 0.;
 	if (simh > 0.) eff = clct/simh;
-	edm::LogInfo("CSCTriggerPrimitivesReader")
-	  << "    " << csc_type[idh] 
-	  << ": clct = " << clct << ", simh = " << simh << " eff = " << eff;
+	cerr<< "    " << csc_type[idh] 
+	  << ": clct = " << clct << ", simh = " << simh << " eff = " << eff<<endl;
 	tot_simh += simh;
 	tot_clct += clct;
       }
-      edm::LogInfo("CSCTriggerPrimitivesReader")
-	<< "    overall: clct = " << tot_clct << ", simh = " << tot_simh
-	<< " eff = " << tot_clct/tot_simh;
+      cerr<< "    overall: clct = " << tot_clct << ", simh = " << tot_simh
+	<< " eff = " << tot_clct/tot_simh<<endl;
     }
   }
 
@@ -278,9 +280,8 @@ void CSCTriggerPrimitivesReader::endJob() {
     double cor = 0.0, tot = 0.0;
     cor = hResolDeltaHS->GetBinContent(hResolDeltaHS->FindBin(0.));
     tot = hResolDeltaHS->GetEntries();
-    edm::LogInfo("CSCTriggerPrimitivesReader")
-      << "\n  Correct half-strip assigned in " << cor << "/" << tot
-      << " = " << cor/tot << " of half-strip CLCTs";
+    cerr<< "\n  Correct half-strip assigned in " << cor << "/" << tot
+      << " = " << cor/tot << " of half-strip CLCTs\n";
     //cor = hResolDeltaDS->GetBinContent(hResolDeltaDS->FindBin(0.));
     //tot = hResolDeltaDS->GetEntries();
     //edm::LogInfo("CSCTriggerPrimitivesReader")
@@ -288,9 +289,8 @@ void CSCTriggerPrimitivesReader::endJob() {
     //  << " = " << cor/tot << " of di-strip CLCTs";
     cor = hResolDeltaWG->GetBinContent(hResolDeltaWG->FindBin(0.));
     tot = hResolDeltaWG->GetEntries();
-    edm::LogInfo("CSCTriggerPrimitivesReader")
-      << "  Correct wire group assigned in " << cor << "/" << tot
-      << " = " << cor/tot << " of ALCTs";
+    cerr<< "  Correct wire group assigned in " << cor << "/" << tot
+      << " = " << cor/tot << " of ALCTs\n";
   }
 }
 
@@ -332,7 +332,7 @@ void CSCTriggerPrimitivesReader::setRootStyle() {
 void CSCTriggerPrimitivesReader::bookALCTHistos() {
   string s;
 
-  hAlctPerEvent  = new TH1F("", "ALCTs per event",     11, -0.5,  10.5);
+  hAlctPerEvent  = new TH1F("", "ALCTs per event",     31, -0.5,  30.5);
   hAlctPerChamber= new TH1F("", "ALCTs per chamber",    4, -0.5,   3.5);
   hAlctPerCSC    = new TH1F("", "ALCTs per CSC type",  10, -0.5,   9.5);
   for (int i = 0; i < MAX_ENDCAPS; i++) { // endcaps
@@ -353,14 +353,14 @@ void CSCTriggerPrimitivesReader::bookALCTHistos() {
 
   edm::Service<TFileService> fs;
   hAlctKeyGroupME11 = fs->make<TH1F>("hAlctKeyGroupME11", "ALCT key wiregroup ME1/1", 50, -0.5, 49.5);
-  
+
   bookedALCTHistos = true;
 }
 
 void CSCTriggerPrimitivesReader::bookCLCTHistos() {
   string s;
 
-  hClctPerEvent  = new TH1F("", "CLCTs per event",    11, -0.5, 10.5);
+  hClctPerEvent  = new TH1F("", "CLCTs per event",    31, -0.5, 30.5);
   hClctPerChamber= new TH1F("", "CLCTs per chamber",   3, -0.5,  2.5);
   hClctPerCSC    = new TH1F("", "CLCTs per CSC type", 10, -0.5,  9.5);
   for (int i = 0; i < MAX_ENDCAPS; i++) { // endcaps
@@ -404,7 +404,7 @@ void CSCTriggerPrimitivesReader::bookCLCTHistos() {
 void CSCTriggerPrimitivesReader::bookLCTTMBHistos() {
   string s;
 
-  hLctTMBPerEvent  = new TH1F("", "LCTs per event",    11, -0.5, 10.5);
+  hLctTMBPerEvent  = new TH1F("", "LCTs per event",    31, -0.5, 30.5);
   hLctTMBPerChamber= new TH1F("", "LCTs per chamber",   3, -0.5,  2.5);
   hLctTMBPerCSC    = new TH1F("", "LCTs per CSC type", 10, -0.5,  9.5);
   hCorrLctTMBPerCSC= new TH1F("", "Corr. LCTs per CSC type", 10, -0.5, 9.5);
@@ -439,13 +439,13 @@ void CSCTriggerPrimitivesReader::bookLCTTMBHistos() {
 
   edm::Service<TFileService> fs;
   hLctTMBKeyGroupME11  = fs->make<TH1F>("hLctTMBKeyGroupME11", "LCT key wiregroup ME1/1", 50, -0.5, 49.5);
-  hLctTMBKeyStripME11  = fs->make<TH1F>("hLctTMBKeyStripME11", "LCT key strip ME1/1",     161, -0.5, 160.5);
+  hLctTMBKeyStripME11  = fs->make<TH1F>("hLctTMBKeyStripME11", "LCT key strip ME1/1",	  161, -0.5, 160.5);
 
   bookedLCTTMBHistos = true;
 }
 
 void CSCTriggerPrimitivesReader::bookLCTMPCHistos() {
-  hLctMPCPerEvent  = new TH1F("", "LCTs per event",    11, -0.5, 10.5);
+  hLctMPCPerEvent  = new TH1F("", "LCTs per event",    31, -0.5, 30.5);
   hLctMPCPerCSC    = new TH1F("", "LCTs per CSC type", 10, -0.5,  9.5);
   hCorrLctMPCPerCSC= new TH1F("", "Corr. LCTs per CSC type", 10, -0.5,9.5);
   hLctMPCEndcap    = new TH1F("", "Endcap",             4, -0.5,  3.5);
@@ -685,7 +685,7 @@ void CSCTriggerPrimitivesReader::fillALCTHistos(const CSCALCTDigiCollection* alc
 	int csctype = getCSCType(id);
 	hAlctPerCSC->Fill(csctype);
 	hAlctCsc[id.endcap()-1][csctype]->Fill(id.chamber());
-	
+        
 	if (csctype==0) hAlctKeyGroupME11->Fill((*digiIt).getKeyWG());
 
         nValidALCTs++;
@@ -737,9 +737,9 @@ void CSCTriggerPrimitivesReader::fillCLCTHistos(const CSCCLCTDigiCollection* clc
 	int csctype = getCSCType(id);
 	hClctPerCSC->Fill(csctype);
 	hClctCsc[id.endcap()-1][csctype]->Fill(id.chamber());
+        
+	if (striptype==1 && csctype==0) hClctKeyStripME11->Fill(keystrip);
 	
-	if (striptype==1 && csctype==0) hClctKeyStripME11->Fill(keystrip); 
-
 	int phibend;
 	int pattern = (*digiIt).getPattern();
 	if (!isTMB07) phibend = ptype[pattern];
@@ -822,12 +822,12 @@ void CSCTriggerPrimitivesReader::fillLCTTMBHistos(const CSCCorrelatedLCTDigiColl
 	// Truly correlated LCTs; for DAQ
 	if (alct_valid && clct_valid) hCorrLctTMBPerCSC->Fill(csctype); 
 
-	if (alct_valid && csctype==0) {
-	  hLctTMBKeyGroupME11->Fill((*digiIt).getKeyWG());
-	}
-	if (clct_valid && csctype==0) {
-	  hLctTMBKeyStripME11->Fill((*digiIt).getStrip());
-	}
+        if (alct_valid && csctype==0) {
+          hLctTMBKeyGroupME11->Fill((*digiIt).getKeyWG());
+        }
+        if (clct_valid && csctype==0) {
+          hLctTMBKeyStripME11->Fill((*digiIt).getStrip());
+        }
 
         nValidLCTs++;
 	nValidLCTsPerCSC++;
@@ -900,12 +900,13 @@ void CSCTriggerPrimitivesReader::fillLCTMPCHistos(const CSCCorrelatedLCTDigiColl
 	// Truly correlated LCTs; for DAQ
 	if (alct_valid && clct_valid) hCorrLctMPCPerCSC->Fill(csctype); 
 
-	if (alct_valid && csctype==0) {
-	  hLctMPCKeyGroupME11->Fill((*digiIt).getKeyWG());
-	}
-	if (clct_valid && csctype==0) {
+
+        if (alct_valid && csctype==0) {
+ 	  hLctMPCKeyGroupME11->Fill((*digiIt).getKeyWG());
+        }
+        if (clct_valid && csctype==0) {
 	  hLctMPCKeyStripME11->Fill((*digiIt).getStrip());
-	}
+        }
 
         nValidLCTs++;
 
@@ -1511,11 +1512,13 @@ void CSCTriggerPrimitivesReader::calcResolution(
 	  hEtaDiffVsEta[stat-1]->Fill(fabs(alctEta), fabs(deltaEta));
 	  hEtaDiffVsWireCsc[csctype]->Fill(wiregroup, deltaEta);
 	}
+	/*
 	else {
 	  edm::LogWarning("CSCTriggerPrimitivesReader")
 	    << "+++ Warning in calcResolution(): no matched SimHit"
 	    << " found! +++\n";
 	}
+	*/
       }
     }
   }
@@ -1606,11 +1609,13 @@ void CSCTriggerPrimitivesReader::calcResolution(
 	    }
 	  }
 	}
+	/*
 	else {
 	  edm::LogWarning("CSCTriggerPrimitivesReader")
 	    << "+++ Warning in calcResolution(): no matched SimHit"
 	    << " found! +++\n";
 	}
+	*/
 
 	// "True bend", defined as difference in phi between muon hit
 	// positions in the first and in the sixth layers.
@@ -1667,7 +1672,10 @@ void CSCTriggerPrimitivesReader::calcEfficiency(
     // Find detId where simHit is located.
     bool sameId = false;
     CSCDetId hitId = (CSCDetId)(*simHitIt).detUnitId();
-    if (hitId.ring() == 4) continue; // skip ME1/A for now.
+    // Skip chambers marked as bad (includes most of ME4/2 chambers).
+    //if (badChambers_->isInBadChamber(hitId)) continue;
+    //if (hitId.ring() == 4) continue; // skip ME1/A for now.
+    if (!plotME1A && hitId.ring() == 4) continue;
     for (chamberIdIt = chamberIds.begin(); chamberIdIt != chamberIds.end();
 	 chamberIdIt++) {
       if ((*chamberIdIt).endcap()  == hitId.endcap() &&
@@ -2733,6 +2741,8 @@ void CSCTriggerPrimitivesReader::drawResolHistos() {
   }
   page++;  c1->Update();
 
+  /* Old histos, separately for halfstrips and distrips */
+  /* 
   ps->NewPage();
   c1->Clear();  c1->cd(0);
   title = new TPaveLabel(0.1, 0.94, 0.9, 0.98,
@@ -2774,6 +2784,7 @@ void CSCTriggerPrimitivesReader::drawResolHistos() {
   pad[page]->cd(10);  hResolDeltaPhiDS->Draw();
   hResolDeltaPhiDS->Fit("gaus","Q");
   page++;  c1->Update();
+  */
 
   ps->NewPage();
   c1->Clear();  c1->cd(0);
@@ -2854,6 +2865,8 @@ void CSCTriggerPrimitivesReader::drawResolHistos() {
   }
   page++;  c1->Update();
 
+  /* Old histos for distrips */
+  /* 
   c1->Clear();  c1->cd(0);
   title = new TPaveLabel(0.1, 0.94, 0.9, 0.98,
 			 "#phi_rec-#phi_sim (mrad) vs distrip #");
@@ -2872,6 +2885,7 @@ void CSCTriggerPrimitivesReader::drawResolHistos() {
     hPhiDiffVsStripCsc[idh][0]->Draw();
   }
   page++;  c1->Update();
+  */
 
   c1->Clear();  c1->cd(0);
   title = new TPaveLabel(0.1, 0.94, 0.9, 0.98,
@@ -2978,7 +2992,7 @@ void CSCTriggerPrimitivesReader::drawEfficHistos() {
     hALCTEffVsEtaCsc[idh] = (TH1F*)hEfficHitsEtaCsc[idh]->Clone();
     hALCTEffVsEtaCsc[idh]->Divide(hEfficALCTEtaCsc[idh],
 				  hEfficHitsEtaCsc[idh], 1., 1., "B");
-    if (idh == 4 || idh == 6 || idh == 8) {
+    if (idh == 3 || idh == 4 || idh == 6 || idh == 8) {
       gPad->Update();  gStyle->SetStatX(0.43);
     }
     else {
@@ -3035,7 +3049,7 @@ void CSCTriggerPrimitivesReader::drawEfficHistos() {
     hCLCTEffVsEtaCsc[idh] = (TH1F*)hEfficHitsEtaCsc[idh]->Clone();
     hCLCTEffVsEtaCsc[idh]->Divide(hEfficCLCTEtaCsc[idh],
 				  hEfficHitsEtaCsc[idh], 1., 1., "B");
-    if (idh == 4 || idh == 6 || idh == 8) {
+    if (idh == 3 || idh == 4 || idh == 6 || idh == 8) {
       gPad->Update();  gStyle->SetStatX(0.43);
     }
     else {
@@ -3252,6 +3266,9 @@ int CSCTriggerPrimitivesReader::getCSCType(const CSCDetId& id) {
 
   if (id.station() == 1) {
     type = (id.triggerCscId()-1)/3;
+    if (id.ring() == 4) {
+      type = 3;
+    }
   }
   else { // stations 2-4
     type = 3 + id.ring() + 2*(id.station()-2);

@@ -11,11 +11,12 @@
  *
  * \author Slava Valuev, UCLA.
  *
- * $Date: 2007/04/18 16:08:55 $
- * $Revision: 1.4 $
+ * $Date: 2009/05/20 14:59:13 $
+ * $Revision: 1.6 $
  *
  */
 
+#include <CondFormats/CSCObjects/interface/CSCBadChambers.h>
 #include <DataFormats/CSCDigi/interface/CSCComparatorDigiCollection.h>
 #include <DataFormats/CSCDigi/interface/CSCWireDigiCollection.h>
 #include <DataFormats/CSCDigi/interface/CSCALCTDigiCollection.h>
@@ -45,7 +46,8 @@ class CSCTriggerPrimitivesBuilder
   /** Build anode, cathode, and correlated LCTs in each chamber and fill
    *  them into output collections.  Select up to three best correlated LCTs
    *  in each (sub)sector and put them into an output collection as well. */
-  void build(const CSCWireDigiCollection* wiredc,
+  void build(const CSCBadChambers* badChambers,
+	     const CSCWireDigiCollection* wiredc,
 	     const CSCComparatorDigiCollection* compdc,
 	     CSCALCTDigiCollection& oc_alct, CSCCLCTDigiCollection& oc_clct,
 	     CSCCorrelatedLCTDigiCollection& oc_lct,
@@ -69,6 +71,9 @@ class CSCTriggerPrimitivesBuilder
   static const int max_subsector;
   static const int min_chamber;   // chambers per trigger subsector
   static const int max_chamber;
+
+  /** VK: special configuration parameters for ME11 treatment. */
+  bool naiveME1aME1b, smartME1aME1b, disableME1a;
 
   int m_minBX, m_maxBX; // min and max BX to sort.
 
