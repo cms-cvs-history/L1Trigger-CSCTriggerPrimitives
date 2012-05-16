@@ -27,8 +27,7 @@
 //                Based on code by Nick Wisniewski (nw@its.caltech.edu)
 //                and a framework by Darin Acosta (acosta@phys.ufl.edu).
 //
-//   $Date: 2010/08/04 10:20:42 $
-//   $Revision: 1.32 $
+//   $Id: $
 //
 //   Modifications: Numerous later improvements by Jason Mumford and
 //                  Slava Valuev (see cvs in ORCA).
@@ -69,12 +68,25 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
   // Switch for a new (2007) version of the TMB firmware.
   isTMB07 = commonParams.getParameter<bool>("isTMB07");
 
+  // Switch for a new (2007) version of the TMB firmware.
+  isSLHC = commonParams.getUntrackedParameter<bool>("isSLHC",false);
+
+  // special configuration parameters for ME11 treatment
+  naiveME1aME1b = commonParams.getUntrackedParameter<bool>("naiveME1aME1b",false);
+  smartME1aME1b = commonParams.getUntrackedParameter<bool>("smartME1aME1b",false);
+  disableME1a = commonParams.getUntrackedParameter<bool>("disableME1a",false);
+  gangedME1a = commonParams.getUntrackedParameter<bool>("gangedME1a",true);
+
   // Choose the appropriate set of configuration parameters depending on
   // isTMB07 and isMTCC flags.
   // Starting with CMSSW_3_1_X, these settings are overwritten by the
   // ones delivered by the EventSetup mechanism.
   edm::ParameterSet alctParams, clctParams;
-  if (isTMB07) {
+  if (isSLHC) {
+    alctParams = conf.getParameter<edm::ParameterSet>("alctSLHC");
+    clctParams = conf.getParameter<edm::ParameterSet>("clctSLHC");
+  }
+  else if (isTMB07) {
     alctParams = conf.getParameter<edm::ParameterSet>("alctParam07");
     clctParams = conf.getParameter<edm::ParameterSet>("clctParam07");
   }
@@ -86,10 +98,6 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
     alctParams = conf.getParameter<edm::ParameterSet>("alctParamOldMC");
     clctParams = conf.getParameter<edm::ParameterSet>("clctParamOldMC");
   }
-  alct = new CSCAnodeLCTProcessor(endcap, station, sector, subsector,
-				  chamber, alctParams, commonParams);
-  clct = new CSCCathodeLCTProcessor(endcap, station, sector, subsector,
-				    chamber, clctParams, commonParams);
 
   // Motherboard parameters: common for all configurations.
   edm::ParameterSet tmbParams  =
@@ -103,7 +111,24 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
   tmb_l1a_window_size = // Common to CLCT and TMB
     tmbParams.getParameter<unsigned int>("tmbL1aWindowSize");
 
+  // whether to not reuse ALCTs that were used by previous matching CLCTs
+  drop_used_alcts = tmbParams.getUntrackedParameter<bool>("tmbDropUsedAlcts",true);
+
+  // configuration handle for number of early time bins
+  early_tbins = tmbParams.getUntrackedParameter<int>("tmbEarlyTbins",4);
+
+  // whether to readout only the earliest two LCTs in readout window
+  readout_earliest_2 = tmbParams.getUntrackedParameter<bool>("tmbReadoutEarliest2",false);
+
   infoV = tmbParams.getUntrackedParameter<int>("verbosity", 0);
+
+  alct = new CSCAnodeLCTProcessor(endcap, station, sector, subsector,
+				  chamber, alctParams, commonParams);
+  clct = new CSCCathodeLCTProcessor(endcap, station, sector, subsector,
+				    chamber, clctParams, commonParams, tmbParams);
+
+
+  if (theStation==1 && CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber)==2) infoV = 3;
 
   // Check and print configuration parameters.
   checkConfigParameters();
@@ -125,6 +150,13 @@ CSCMotherboard::CSCMotherboard() :
 
   isMTCC  = false;
   isTMB07 = true;
+  isSLHC = true;
+
+  naiveME1aME1b = false;
+  smartME1aME1b = false;
+  disableME1a = false;
+
+  early_tbins = 4;
 
   alct = new CSCAnodeLCTProcessor();
   clct = new CSCCathodeLCTProcessor();
@@ -260,10 +292,10 @@ void CSCMotherboard::run(
     if (clct->bestCLCT[bx_clct].isValid()) {
       bool is_matched = false;
       int bx_alct_start = bx_clct - match_trig_window_size/2;
-      // int bx_alct_stop  = bx_clct + match_trig_window_size/2;
+      int bx_alct_stop  = bx_clct + match_trig_window_size/2;
       // Empirical correction to match 2009 collision data (firmware change?)
-      int bx_alct_stop  = bx_clct + match_trig_window_size/2 + 
-	match_trig_window_size%2;
+      if (!isSLHC) bx_alct_stop += match_trig_window_size%2;
+      
       for (int bx_alct = bx_alct_start; bx_alct <= bx_alct_stop; bx_alct++) {
 	if (bx_alct < 0 || bx_alct >= CSCAnodeLCTProcessor::MAX_ALCT_BINS)
 	  continue;
@@ -307,6 +339,9 @@ CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
       std::vector<CSCCLCTDigi> clctV = clct->run(compdc); // run cathodeLCT
     }
 
+    int used_alct_mask[20];
+    for (int a=0;a<20;++a) used_alct_mask[a]=0;
+
     int bx_alct_matched = 0; // bx of last matched ALCT
     for (int bx_clct = 0; bx_clct < CSCCathodeLCTProcessor::MAX_CLCT_BINS;
 	 bx_clct++) {
@@ -325,13 +360,15 @@ CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
 	// available.
 	bool is_matched = false;
 	int bx_alct_start = bx_clct - match_trig_window_size/2;
-	// int bx_alct_stop  = bx_clct + match_trig_window_size/2;
-	// Empirical correction to match 2009 collision data (firmware change?)
-	int bx_alct_stop  = bx_clct + match_trig_window_size/2 +
-	  match_trig_window_size%2;
+        int bx_alct_stop  = bx_clct + match_trig_window_size/2;
+        // Empirical correction to match 2009 collision data (firmware change?)
+        if (!isSLHC) bx_alct_stop += match_trig_window_size%2;
+
 	for (int bx_alct = bx_alct_start; bx_alct <= bx_alct_stop; bx_alct++) {
 	  if (bx_alct < 0 || bx_alct >= CSCAnodeLCTProcessor::MAX_ALCT_BINS)
 	    continue;
+	  // default: do not reuse ALCTs that were used with previous CLCTs
+          if (drop_used_alcts && used_alct_mask[bx_alct]) continue;
 	  if (alct->bestALCT[bx_alct].isValid()) {
 	    if (infoV > 1) LogTrace("CSCMotherboard")
 	      << "Successful ALCT-CLCT match: bx_clct = " << bx_clct
@@ -339,6 +376,7 @@ CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
 	      << "]; bx_alct = " << bx_alct;
 	    correlateLCTs(alct->bestALCT[bx_alct], alct->secondALCT[bx_alct],
 			  clct->bestCLCT[bx_clct], clct->secondCLCT[bx_clct]);
+            used_alct_mask[bx_alct] += 1;
 	    is_matched = true;
 	    bx_alct_matched = bx_alct;
 	    break;
@@ -401,12 +439,8 @@ std::vector<CSCCorrelatedLCTDigi> CSCMotherboard::readoutLCTs() {
   // to the fifo_pretrig parameter, but I am not completely sure how.
   // Just choose it such that the window is centered at bx=7.  This may
   // need further tweaking if the value of tmb_l1a_window_size changes.
-  static int early_tbins = 4;
-  // The number of LCT bins in the read-out is given by the
-  // tmb_l1a_window_size parameter, but made even by setting the LSB
-  // of tmb_l1a_window_size to 0.
-  // static int lct_bins =
-  //   (tmb_l1a_window_size%2 == 0) ? tmb_l1a_window_size : tmb_l1a_window_size-1;
+  //static int early_tbins = 4;
+  
   // Empirical correction to match 2009 collision data (firmware change?)
   static int lct_bins   = tmb_l1a_window_size;
   static int late_tbins = early_tbins + lct_bins;
@@ -458,13 +492,17 @@ std::vector<CSCCorrelatedLCTDigi> CSCMotherboard::readoutLCTs() {
       continue;
     }
 
-    // For now, take only LCTs in the earliest bx in the read-out window:
+    // If (readout_earliest_2) take only LCTs in the earliest bx in the read-out window:
     // in digi->raw step, LCTs have to be packed into the TMB header, and
-    // there is room just for two.
-    if (bx_readout == -1 || bx == bx_readout) {
-      tmpV.push_back(*plct);
-      if (bx_readout == -1) bx_readout = bx;
+    // currently there is room just for two.
+    if (readout_earliest_2) {
+      if (bx_readout == -1 || bx == bx_readout) {
+        tmpV.push_back(*plct);
+        if (bx_readout == -1) bx_readout = bx;
+      }
     }
+    // if readout_earliest_2 == false, save all LCTs
+    else tmpV.push_back(*plct);
   }
   return tmpV;
 }

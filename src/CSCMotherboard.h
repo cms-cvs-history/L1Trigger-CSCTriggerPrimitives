@@ -31,8 +31,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Date: 2009/05/15 16:37:50 $
- * $Revision: 1.14 $
+ * $Id: $
  *
  */
 
@@ -83,7 +82,9 @@ class CSCMotherboard
   /** Cathode LCT processor. */
   CSCCathodeLCTProcessor* clct;
 
- private:
+ // VK: change to protected, to allow inheritance
+ protected:
+
   /** Verbosity level: 0: no print (default).
    *                   1: print LCTs found. */
   int infoV;
@@ -101,10 +102,25 @@ class CSCMotherboard
   /** Flag for new (2007) version of TMB firmware. */
   bool isTMB07;
 
+  /** Flag for SLHC studies. */
+  bool isSLHC;
+
   /** Configuration parameters. */
   unsigned int mpc_block_me1a;
   unsigned int alct_trig_enable, clct_trig_enable, match_trig_enable;
   unsigned int match_trig_window_size, tmb_l1a_window_size;
+
+  /** SLHC: special configuration parameters for ME11 treatment. */
+  bool naiveME1aME1b, smartME1aME1b, disableME1a, gangedME1a;
+
+  /** SLHC: whether to not reuse ALCTs that were used by previous matching CLCTs */
+  bool drop_used_alcts;
+
+  /** SLHC: separate handle for early time bins */
+  int early_tbins;
+  
+  /** SLHC: whether to readout only the earliest two LCTs in readout window */
+  bool readout_earliest_2;
 
   /** Default values of configuration parameters. */
   static const unsigned int def_mpc_block_me1a;
