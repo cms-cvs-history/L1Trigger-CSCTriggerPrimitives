@@ -8,7 +8,7 @@
 //
 //   Author List: S. Valuev, UCLA.
 //
-//   $Id: $
+//   $Id: CSCTriggerPrimitivesBuilder.cc,v 1.21.2.1 2012/05/16 00:31:25 khotilov Exp $
 //
 //   Modifications:
 //
@@ -196,9 +196,7 @@ void CSCTriggerPrimitivesBuilder::build(const CSCBadChambers* badChambers,
 	      std::vector<CSCCLCTDigi> clctV = tmb->clct->readoutCLCTs();
               std::vector<int> preTriggerBXs = tmb->clct->preTriggerBXs();
 
-	      // Skip to next chamber if there are no LCTs to save.
-	      if (alctV.empty() && clctV.empty() && lctV.empty()) continue;
-	      else {
+              if (!(alctV.empty() && clctV.empty() && lctV.empty())) {
 		LogTrace("L1CSCTrigger")
 		  << "CSCTriggerPrimitivesBuilder got results in " <<detid;
 	      }

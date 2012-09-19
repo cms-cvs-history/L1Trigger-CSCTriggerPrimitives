@@ -19,7 +19,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: $
+//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.1 2012/05/16 00:31:24 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -1149,7 +1149,7 @@ std::vector<CSCCLCTDigi> CSCCathodeLCTProcessor::findLCTs(const std::vector<int>
   const int max_lct_num = 2;
   const int adjacent_strips = 2;
   // Distrip, halfstrip pattern threshold.
-  const int ptrn_thrsh[2] = {nplanes_hit_pattern, nplanes_hit_pattern};
+  const unsigned int ptrn_thrsh[2] = {nplanes_hit_pattern, nplanes_hit_pattern};
   int highest_quality = 0;
 
   int keystrip_data[CSCConstants::NUM_HALF_STRIPS][7];
@@ -1195,7 +1195,7 @@ std::vector<CSCCLCTDigi> CSCCathodeLCTProcessor::findLCTs(const std::vector<int>
       // equal to the (variable) valid pattern threshold ptrn_thrsh.
       int keystrip = final_lcts[j];
       if (keystrip >= 0 &&
-	  keystrip_data[keystrip][CLCT_QUALITY] >= ptrn_thrsh[stripType]) {
+	  keystrip_data[keystrip][CLCT_QUALITY] >= static_cast<int>(ptrn_thrsh[stripType])) {
      	// assign the stripType here. 1 = halfstrip, 0 = distrip.
      	keystrip_data[keystrip][CLCT_STRIP_TYPE] = stripType;
 	// Now make the LCT words for the 2 highest, and store them in a list
