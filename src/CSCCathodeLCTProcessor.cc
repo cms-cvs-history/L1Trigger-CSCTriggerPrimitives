@@ -19,7 +19,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.1 2012/05/16 00:31:24 khotilov Exp $
+//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.2 2012/09/19 17:54:49 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -760,8 +760,6 @@ void CSCCathodeLCTProcessor::run(
 
 bool CSCCathodeLCTProcessor::getDigis(const CSCComparatorDigiCollection* compdc) {
   bool noDigis = true;
-  int  theRing    = CSCTriggerNumbering::ringFromTriggerLabels(theStation,
-							       theTrigChamber);
   int  theChamber = CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
                                      theSubsector, theStation, theTrigChamber);
 

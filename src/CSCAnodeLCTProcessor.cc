@@ -20,7 +20,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: $
+//   $Id: CSCAnodeLCTProcessor.cc,v 1.42.2.1 2012/05/16 00:31:24 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -631,8 +631,6 @@ void CSCAnodeLCTProcessor::run(const std::vector<int> wire[CSCConstants::NUM_LAY
 bool CSCAnodeLCTProcessor::getDigis(const CSCWireDigiCollection* wiredc) {
   // Routine for getting digis and filling digiV vector.
   bool noDigis = true;
-  int  theRing    = CSCTriggerNumbering::ringFromTriggerLabels(theStation,
-							       theTrigChamber);
   int  theChamber = CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
                                      theSubsector, theStation, theTrigChamber);
 
