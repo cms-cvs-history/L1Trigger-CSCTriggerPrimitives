@@ -13,7 +13,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Id: $
+ * $Id: CSCAnodeLCTProcessor.h,v 1.22.2.1 2012/05/16 00:31:24 khotilov Exp $
  *
  */
 
@@ -144,9 +144,6 @@ class CSCAnodeLCTProcessor
 
   /** SLHC: deadtime clocks after pretrigger (extra in addition to drift_delay) */
   unsigned int pretrig_extra_deadtime;
-
-  /** SLHC: offsets for corrected bx */
-  std::vector<double> alct_bx_offsets;
 
   /** SLHC: whether to use corrected_bx instead of pretrigger BX */
   bool use_corrected_bx;
