@@ -20,7 +20,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: CSCAnodeLCTProcessor.cc,v 1.42.2.1 2012/05/16 00:31:24 khotilov Exp $
+//   $Id: CSCAnodeLCTProcessor.cc,v 1.42.2.2 2012/09/28 07:03:03 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -240,12 +240,6 @@ CSCAnodeLCTProcessor::CSCAnodeLCTProcessor(unsigned endcap, unsigned station,
   // deadtime clocks after pretrigger (extra in addition to drift_delay)
   pretrig_extra_deadtime = conf.getUntrackedParameter<unsigned int>("alctPretrigDeadtime",4);
 
-  // offsets for corrected bx
-  std::vector<double> def_ofsets;
-  for (int i=0; i<11; i++) def_ofsets.push_back(0.);
-  alct_bx_offsets = conf.getUntrackedParameter< std::vector<double> >("alctBxOffsets",def_ofsets);
-  assert(alct_bx_offsets.size() == 11);
-
   // whether to calculate bx as corrected_bx instead of pretrigger one
   use_corrected_bx = conf.getUntrackedParameter<bool>("alctUseCorrectedBx",false);
 
@@ -255,7 +249,7 @@ CSCAnodeLCTProcessor::CSCAnodeLCTProcessor(unsigned endcap, unsigned station,
   // Check and print configuration parameters.
   checkConfigParameters();
   if ((infoV > 0 || isSLHC) && !config_dumped) {
-    std::cout<<"**** ALCT constructor parameters dump ****"<<std::endl;
+    //std::cout<<"**** ALCT constructor parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
     if (isSLHC) {
@@ -308,7 +302,7 @@ CSCAnodeLCTProcessor::CSCAnodeLCTProcessor() :
   // Check and print configuration parameters.
   checkConfigParameters();
   if (!config_dumped) {
-    std::cout<<"**** ALCT default constructor parameters dump ****"<<std::endl;
+    //std::cout<<"**** ALCT default constructor parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }
@@ -358,7 +352,7 @@ void CSCAnodeLCTProcessor::setConfigParameters(const CSCDBL1TPParameters* conf) 
   // Check and print configuration parameters.
   checkConfigParameters();
   if (!config_dumped) {
-    std::cout<<"**** ALCT setConfigParam parameters dump ****"<<std::endl;
+    //std::cout<<"**** ALCT setConfigParam parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }
@@ -489,7 +483,7 @@ CSCAnodeLCTProcessor::run(const CSCWireDigiCollection* wiredc) {
 
   static bool config_dumped = false;
   if ((infoV > 0 || isSLHC) && !config_dumped) {
-    std::cout<<"**** ALCT run parameters dump ****"<<std::endl;
+    //std::cout<<"**** ALCT run parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }
@@ -944,20 +938,6 @@ bool CSCAnodeLCTProcessor::patternDetection(const int key_wire) {
 	}
       }
     }
-    /*    
-    int chamberType = theRing + 2*theStation; // stations 2-4
-    if(theStation == 1) {
-      chamberType = theRing+1;
-      if (theRing == 4) chamberType = 1;
-    }
-    
-    first_bx_corrected[key_wire] = (int) round( times_sum/num_pattern_hits - alct_bx_offsets[chamberType] );
-
-    if (infoV > 1) LogTrace("CSCAnodeLCTProcessor")
-      <<"bx="<<first_bx[key_wire]<<" bx_cor="<< first_bx_corrected[key_wire]
-      <<" sum/npat="<< times_sum/num_pattern_hits
-      <<" double="<<times_sum/num_pattern_hits - alct_bx_offsets[chamberType];
-    */
 
     // calculate median
     const int sz = mset_for_median.size();
