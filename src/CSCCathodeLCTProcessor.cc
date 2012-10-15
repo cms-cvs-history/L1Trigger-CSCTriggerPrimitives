@@ -19,7 +19,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.2 2012/09/19 17:54:49 khotilov Exp $
+//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.3 2012/09/28 07:03:03 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -318,7 +318,7 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor(unsigned endcap,
   // Check and print configuration parameters.
   checkConfigParameters();
   if ((infoV > 0 || isSLHC) && !config_dumped) {
-    std::cerr<<"**** CLCT constructor parameters dump ****"<<std::endl;
+    //std::cerr<<"**** CLCT constructor parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }
@@ -375,7 +375,7 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor() :
   // Check and print configuration parameters.
   checkConfigParameters();
   if (!config_dumped) {
-    std::cerr<<"**** CLCT default constructor parameters dump ****"<<std::endl;
+    //std::cerr<<"**** CLCT default constructor parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }
@@ -431,7 +431,7 @@ void CSCCathodeLCTProcessor::setConfigParameters(const CSCDBL1TPParameters* conf
   // Check and print configuration parameters.
   checkConfigParameters();
   if (!config_dumped) {
-    std::cerr<<"**** CLCT setConfigParams parameters dump ****"<<std::endl;
+    //std::cerr<<"**** CLCT setConfigParams parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }
@@ -548,7 +548,7 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
 
   static bool config_dumped = false;
   if ((infoV > 0 || isSLHC) && !config_dumped) {
-    std::cerr<<"**** CLCT run parameters dump ****"<<std::endl;
+    //std::cerr<<"**** CLCT run parameters dump ****"<<std::endl;
     dumpConfigParams();
     config_dumped = true;
   }

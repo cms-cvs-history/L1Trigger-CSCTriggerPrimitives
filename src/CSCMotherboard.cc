@@ -27,7 +27,7 @@
 //                Based on code by Nick Wisniewski (nw@its.caltech.edu)
 //                and a framework by Darin Acosta (acosta@phys.ufl.edu).
 //
-//   $Id: $
+//   $Id: CSCMotherboard.cc,v 1.33.2.1 2012/05/16 00:31:25 khotilov Exp $
 //
 //   Modifications: Numerous later improvements by Jason Mumford and
 //                  Slava Valuev (see cvs in ORCA).
@@ -822,4 +822,5 @@ void CSCMotherboard::dumpConfigParams() const {
        << tmb_l1a_window_size << "\n";
   strm << "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++\n";
   LogDebug("CSCMotherboard") << strm.str();
+  //std::cerr << strm.str()<<std::endl;
 }
