@@ -19,7 +19,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.3 2012/09/28 07:03:03 khotilov Exp $
+//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.4 2012/10/15 23:19:20 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -269,7 +269,6 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor(unsigned endcap,
   isSLHC       = comm.getUntrackedParameter<bool>("isSLHC",false);
 
   // special configuration parameters for ME11 treatment
-  naiveME1aME1b = comm.getUntrackedParameter<bool>("naiveME1aME1b",false);
   smartME1aME1b = comm.getUntrackedParameter<bool>("smartME1aME1b",false);
   disableME1a = comm.getUntrackedParameter<bool>("disableME1a",false);
   gangedME1a = comm.getUntrackedParameter<bool>("gangedME1a",true);
@@ -361,7 +360,6 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor() :
   isMTCC  = false;
   isTMB07 = true;
 
-  naiveME1aME1b = false;
   smartME1aME1b = false;
   disableME1a = false;
   gangedME1a = true;
@@ -568,10 +566,10 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
       // to them.
       // For SLHC ME1/1 is set to have 4 CFEBs in ME1/b and 3 CFEBs in ME1/a
       if (theStation == 1) {
-	if (!(smartME1aME1b || naiveME1aME1b) && !disableME1a && theRing == 1 ) numStrips = 80;
-	if (!(smartME1aME1b || naiveME1aME1b) &&  disableME1a && theRing == 1 ) numStrips = 64;
-	if ( (smartME1aME1b || naiveME1aME1b) && !disableME1a && theRing == 1 ) numStrips = 64;
-	if ( (smartME1aME1b || naiveME1aME1b) && !disableME1a && theRing == 4 ) {
+	if (!smartME1aME1b && !disableME1a && theRing == 1 ) numStrips = 80;
+	if (!smartME1aME1b &&  disableME1a && theRing == 1 ) numStrips = 64;
+	if ( smartME1aME1b && !disableME1a && theRing == 1 ) numStrips = 64;
+	if ( smartME1aME1b && !disableME1a && theRing == 4 ) {
 	  if (gangedME1a) numStrips = 16;
 	  else numStrips = 48;
 	}
@@ -771,7 +769,7 @@ bool CSCCathodeLCTProcessor::getDigis(const CSCComparatorDigiCollection* compdc)
     getDigis(compdc, detid);
 
     // If this is ME1/1, fetch digis in corresponding ME1/A (ring=4) as well.
-    if (theStation == 1 && theRing == 1 && !disableME1a && !naiveME1aME1b && !smartME1aME1b) {
+    if (theStation == 1 && theRing == 1 && !disableME1a && !smartME1aME1b) {
       CSCDetId detid_me1a(theEndcap, theStation, 4, theChamber, i_layer+1);
       getDigis(compdc, detid_me1a);
     }
@@ -798,7 +796,7 @@ void CSCCathodeLCTProcessor::getDigis(const CSCComparatorDigiCollection* compdc,
   const CSCComparatorDigiCollection::Range rcompd = compdc->get(id);
   for (CSCComparatorDigiCollection::const_iterator digiIt = rcompd.first;
        digiIt != rcompd.second; ++digiIt) {
-    if (me1a && digiIt->getStrip() <= 16 && !disableME1a && !naiveME1aME1b && !smartME1aME1b) {
+    if (me1a && digiIt->getStrip() <= 16 && !disableME1a && !smartME1aME1b) {
       // Move ME1/A comparators from CFEB=0 to CFEB=4 if this has not
       // been done already.
       CSCComparatorDigi digi_corr(digiIt->getStrip()+64,

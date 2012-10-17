@@ -13,7 +13,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Id: CSCAnodeLCTProcessor.h,v 1.22.2.1 2012/05/16 00:31:24 khotilov Exp $
+ * $Id: CSCAnodeLCTProcessor.h,v 1.22.2.2 2012/10/15 23:16:41 khotilov Exp $
  *
  */
 
@@ -130,7 +130,7 @@ class CSCAnodeLCTProcessor
   //unsigned int nplanes_hit_pretrig_my, l1a_window_width_my;
 
   /** SLHC: special configuration parameters for ME1a treatment */
-  bool naiveME1aME1b, smartME1aME1b, disableME1a;
+  bool smartME1aME1b, disableME1a;
 
   /** SLHC: separate handle for early time bins */
   int early_tbins;

@@ -23,7 +23,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Id: $
+ * $Id: CSCCathodeLCTProcessor.h,v 1.25.2.1 2012/05/16 00:31:24 khotilov Exp $
  *
  */
 
@@ -150,7 +150,7 @@ class CSCCathodeLCTProcessor
   //unsigned int hit_persist_my, nplanes_hit_pretrig_my, pid_thresh_pretrig_my, min_separation_my;
 
   /** VK: special configuration parameters for ME1a treatment */
-  bool naiveME1aME1b, smartME1aME1b, disableME1a, gangedME1a;
+  bool smartME1aME1b, disableME1a, gangedME1a;
 
   /** VK: separate handle for early time bins */
   int early_tbins;

@@ -20,7 +20,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: CSCAnodeLCTProcessor.cc,v 1.42.2.2 2012/09/28 07:03:03 khotilov Exp $
+//   $Id: CSCAnodeLCTProcessor.cc,v 1.42.2.3 2012/10/15 23:18:44 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -222,7 +222,6 @@ CSCAnodeLCTProcessor::CSCAnodeLCTProcessor(unsigned endcap, unsigned station,
   isSLHC       = comm.getUntrackedParameter<bool>("isSLHC",false);
 
   // special configuration parameters for ME11 treatment
-  naiveME1aME1b = comm.getUntrackedParameter<bool>("naiveME1aME1b",false);
   smartME1aME1b = comm.getUntrackedParameter<bool>("smartME1aME1b",false);
   disableME1a = comm.getUntrackedParameter<bool>("disableME1a",false);
 
@@ -253,8 +252,8 @@ CSCAnodeLCTProcessor::CSCAnodeLCTProcessor(unsigned endcap, unsigned station,
     dumpConfigParams();
     config_dumped = true;
     if (isSLHC) {
-      std::cout<<"naiveME1aME1b smartME1aME1b disableME1a = "
-               <<naiveME1aME1b<<" "<<smartME1aME1b<<" "<<disableME1a<<std::endl;
+      std::cout<<"smartME1aME1b disableME1a = "
+               <<smartME1aME1b<<" "<<disableME1a<<std::endl;
     }
   }
 
@@ -293,7 +292,6 @@ CSCAnodeLCTProcessor::CSCAnodeLCTProcessor() :
   isTMB07 = true;
 
   isSLHC = false;
-  naiveME1aME1b = false;
   smartME1aME1b = false;
   disableME1a = false;
 
@@ -636,7 +634,7 @@ bool CSCAnodeLCTProcessor::getDigis(const CSCWireDigiCollection* wiredc) {
     getDigis(wiredc, detid);
 
     // If this is ME1/1, fetch digis in corresponding ME1/A (ring=4) as well.
-    if (theStation == 1 && theRing == 1 && !disableME1a && !naiveME1aME1b) {
+    if (theStation == 1 && theRing == 1 && !disableME1a) {
       CSCDetId detid_me1a(theEndcap, theStation, 4, theChamber, i_layer+1);
       getDigis(wiredc, detid_me1a);
     }
