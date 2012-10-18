@@ -19,7 +19,7 @@
 //                Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch),
 //                May 2006.
 //
-//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.4 2012/10/15 23:19:20 khotilov Exp $
+//   $Id: CSCCathodeLCTProcessor.cc,v 1.44.2.5 2012/10/17 06:54:05 khotilov Exp $
 //
 //   Modifications: 
 //
@@ -272,7 +272,11 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor(unsigned endcap,
   smartME1aME1b = comm.getUntrackedParameter<bool>("smartME1aME1b",false);
   disableME1a = comm.getUntrackedParameter<bool>("disableME1a",false);
   gangedME1a = comm.getUntrackedParameter<bool>("gangedME1a",true);
-  
+
+  if (isSLHC && !smartME1aME1b) edm::LogError("L1CSCTPEmulatorConfigError")
+    << "+++ SLHC upgrade configuration is used (isSLHC=True) but smartME1aME1b=False!\n"
+    << "Only smartME1aME1b algorithm is so far supported for upgrade! +++\n";
+
   if (isTMB07) {
     pid_thresh_pretrig =
       conf.getParameter<unsigned int>("clctPidThreshPretrig");
@@ -282,7 +286,7 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor(unsigned endcap,
     start_bx_shift = conf.getUntrackedParameter<int>("clctStartBxShift",0);
   }
 
-  if (isSLHC) {
+  if (smartME1aME1b) {
     // use of localized dead-time zones
     use_dead_time_zoning = 
       conf.getUntrackedParameter<bool>("useDeadTimeZoning",true);
@@ -331,21 +335,25 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor(unsigned endcap,
 
   theRing = CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber);
 
+  theChamber = CSCTriggerNumbering::chamberFromTriggerLabels(theSector, theSubsector,
+                                                             theStation, theTrigChamber);
+
+  // trigger numbering doesn't distinguish between ME1a and ME1b chambers:
+  isME11 = (theStation == 1 && theRing == 1);
+
   //if (theStation==1 && theRing==2) infoV = 3;
 
-  // engage in various and sundry tests, but only for a single chamber.
+  ////engage in various and sundry tests, but only for a single chamber.
   //if (theStation == 2 && theSector == 1 &&
-  //    CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber) == 1 && 
-  //    CSCTriggerNumbering::chamberFromTriggerLabels(theSector, theSubsector,
-  //						    theStation, theTrigChamber) == 1) {
-    // test all possible patterns in our uber pattern. 
-    // testPatterns();
-    // this tests to make sure what goes into an LCT is what comes out
-    // testLCTs();
-    // print out all the patterns to make sure we've got what we think
-    // we've got.
-    // printPatterns();
-  //  }
+  //    theRing == 1 &&
+  //    theChamber == 1) {
+  ////  test all possible patterns in our uber pattern.
+  //  testPatterns();
+  ////  this tests to make sure what goes into an LCT is what comes out
+  //  testLCTs();
+  ////  print out all the patterns to make sure we've got what we think we've got.
+  //  printPatterns();
+  //}
 }
 
 CSCCathodeLCTProcessor::CSCCathodeLCTProcessor() :
@@ -386,6 +394,7 @@ CSCCathodeLCTProcessor::CSCCathodeLCTProcessor() :
   }
   
   theRing = CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber);
+  isME11 = (theStation == 1 && theRing == 1);
 }
 
 void CSCCathodeLCTProcessor::setDefaultConfigParameters() {
@@ -555,17 +564,17 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
   // Do it only once per chamber.
   if (numStrips == 0) {
     CSCTriggerGeomManager* theGeom = CSCTriggerGeometry::get();
-    CSCChamber* theChamber = theGeom->chamber(theEndcap, theStation, theSector,
+    CSCChamber* chamber = theGeom->chamber(theEndcap, theStation, theSector,
 					      theSubsector, theTrigChamber);
-    if (theChamber) {
-      numStrips = theChamber->layer(1)->geometry()->numberOfStrips();
+    if (chamber) {
+      numStrips = chamber->layer(1)->geometry()->numberOfStrips();
       // ME1/a is known to the readout hardware as strips 65-80 of ME1/1.
       // Still need to decide whether we do any special adjustments to
       // reconstruct LCTs in this region (3:1 ganged strips); for now, we
       // simply allow for hits in ME1/a and apply standard reconstruction
       // to them.
       // For SLHC ME1/1 is set to have 4 CFEBs in ME1/b and 3 CFEBs in ME1/a
-      if (theStation == 1) {
+      if (isME11) {
 	if (!smartME1aME1b && !disableME1a && theRing == 1 ) numStrips = 80;
 	if (!smartME1aME1b &&  disableME1a && theRing == 1 ) numStrips = 64;
 	if ( smartME1aME1b && !disableME1a && theRing == 1 ) numStrips = 64;
@@ -579,10 +588,7 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
 	if (infoV >= 0) edm::LogError("L1CSCTPEmulatorSetupError")
 	  << "+++ Number of strips, " << numStrips
 	  << " found in ME" << ((theEndcap == 1) ? "+" : "-")
-	  << theStation << "/"
-          << theRing << "/"
-	  << CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-			      theSubsector, theStation, theTrigChamber)
+	  << theStation << "/" << theRing << "/" << theChamber
 	  << " (sector " << theSector << " subsector " << theSubsector
 	  << " trig id. " << theTrigChamber << ")"
 	  << " exceeds max expected, " << CSCConstants::MAX_NUM_STRIPS
@@ -605,15 +611,13 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
       // subtraction of 1 half-strip for TMB-07 later on. -SV.
       for (int i_layer = 0; i_layer < CSCConstants::NUM_LAYERS; i_layer++) {
 	stagger[i_layer] =
-	  (theChamber->layer(i_layer+1)->geometry()->stagger() + 1) / 2;
+	  (chamber->layer(i_layer+1)->geometry()->stagger() + 1) / 2;
       }
     }
     else {
       if (infoV >= 0) edm::LogError("L1CSCTPEmulatorConfigError")
-	<< " ME" << ((theEndcap == 1) ? "+" : "-") << theStation << "/"
-        << theRing << "/"
-	<< CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-			    theSubsector, theStation, theTrigChamber)
+	<< " ME" << ((theEndcap == 1) ? "+" : "-")
+        << theStation << "/" << theRing << "/" << theChamber
 	<< " (sector " << theSector << " subsector " << theSubsector
 	<< " trig id. " << theTrigChamber << ")"
 	<< " is not defined in current geometry! +++\n"
@@ -624,10 +628,8 @@ CSCCathodeLCTProcessor::run(const CSCComparatorDigiCollection* compdc) {
 
   if (numStrips < 0) {
     if (infoV >= 0) edm::LogError("L1CSCTPEmulatorConfigError")
-      << " ME" << ((theEndcap == 1) ? "+" : "-") << theStation << "/"
-      << theRing << "/"
-      << CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-			  theSubsector, theStation, theTrigChamber)
+      << " ME" << ((theEndcap == 1) ? "+" : "-")
+      << theStation << "/" << theRing << "/" << theChamber
       << " (sector " << theSector << " subsector " << theSubsector
       << " trig id. " << theTrigChamber << "):"
       << " numStrips = " << numStrips << "; CLCT emulation skipped! +++";
@@ -685,8 +687,10 @@ void CSCCathodeLCTProcessor::run(
   // are returned.
   std::vector<CSCCLCTDigi> LCTlist;
 
-  if (isTMB07) { // TMB07 (latest) version of the CLCT algorithm.
-    if (isSLHC && use_dead_time_zoning) LCTlist = findLCTsSLHC(halfstrip);
+  if (isTMB07) {
+    // Upgrade version for ME11 with better dead-time handling
+    if (isSLHC && smartME1aME1b && isME11 && use_dead_time_zoning) LCTlist = findLCTsSLHC(halfstrip);
+    // TMB07 version of the CLCT algorithm.
     else LCTlist = findLCTs(halfstrip);
   }
   else if (isMTCC) { // MTCC version.
@@ -733,10 +737,7 @@ void CSCCathodeLCTProcessor::run(
       bestCLCT[bx].setTrknmb(1);
       if (infoV > 0) LogDebug("CSCCathodeLCTProcessor")
 	<< bestCLCT[bx] << " found in ME" << ((theEndcap == 1) ? "+" : "-")
-	<< theStation << "/"
-	<< theRing << "/"
-	<< CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-			    theSubsector, theStation, theTrigChamber)
+        << theStation << "/" << theRing << "/" << theChamber
 	<< " (sector " << theSector << " subsector " << theSubsector
 	<< " trig id. " << theTrigChamber << ")" << "\n";
     }
@@ -744,10 +745,7 @@ void CSCCathodeLCTProcessor::run(
       secondCLCT[bx].setTrknmb(2);
       if (infoV > 0) LogDebug("CSCCathodeLCTProcessor")
 	<< secondCLCT[bx] << " found in ME" << ((theEndcap == 1) ? "+" : "-")
-	<< theStation << "/"
-	<< theRing << "/"
-	<< CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-			    theSubsector, theStation, theTrigChamber)
+        << theStation << "/" << theRing << "/" << theChamber
 	<< " (sector " << theSector << " subsector " << theSubsector
 	<< " trig id. " << theTrigChamber << ")" << "\n";
     }
@@ -758,8 +756,6 @@ void CSCCathodeLCTProcessor::run(
 
 bool CSCCathodeLCTProcessor::getDigis(const CSCComparatorDigiCollection* compdc) {
   bool noDigis = true;
-  int  theChamber = CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-                                     theSubsector, theStation, theTrigChamber);
 
   // Loop over layers and save comparator digis on each one into digiV[layer].
   for (int i_layer = 0; i_layer < CSCConstants::NUM_LAYERS; i_layer++) {
@@ -2055,7 +2051,7 @@ std::vector<CSCCLCTDigi> CSCCathodeLCTProcessor::findLCTs(const std::vector<int>
   int keystrip_data[max_lcts][7] = {{0}};
   unsigned int pulse[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS];
 
-  // Fire half-strip one-shots for hit_persist bx's (6 bx's by default).
+  // Fire half-strip one-shots for hit_persist bx's (4 bx's by default).
   pulseExtension(halfstrip, maxHalfStrips, pulse);
 
   unsigned int start_bx = start_bx_shift;
@@ -2488,17 +2484,7 @@ CSCCathodeLCTProcessor::findLCTsSLHC(const std::vector<int> halfstrip[CSCConstan
 
   if (infoV > 1) dumpDigis(halfstrip, 1, maxHalfStrips);
 
-  unsigned int start_bx = start_bx_shift;
-  // Stop drift_delay bx's short of fifo_tbins since at later bx's we will
-  // not have a full set of hits to start pattern search anyway.
-  unsigned int stop_bx = fifo_tbins - drift_delay;
-
-  enum
-  {
-    max_lcts = 2
-  };
-
-  unsigned int pulse[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS];
+  enum { max_lcts = 2 };
 
   // keeps dead-time zones around key halfstrips of triggered CLCTs
   bool busyMap[CSCConstants::NUM_HALF_STRIPS][MAX_CLCT_BINS];
@@ -2508,8 +2494,15 @@ CSCCathodeLCTProcessor::findLCTsSLHC(const std::vector<int> halfstrip[CSCConstan
 
   std::vector<CSCCLCTDigi> lctListBX;
 
-  // Fire half-strip one-shots for hit_persist bx's (6 bx's by default).
+  unsigned int pulse[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS];
+
+  // Fire half-strip one-shots for hit_persist bx's (4 bx's by default).
   pulseExtension(halfstrip, maxHalfStrips, pulse);
+
+  unsigned int start_bx = start_bx_shift;
+  // Stop drift_delay bx's short of fifo_tbins since at later bx's we will
+  // not have a full set of hits to start pattern search anyway.
+  unsigned int stop_bx = fifo_tbins - drift_delay;
 
   // Allow for more than one pass over the hits in the time window.
   // Do search in every BX
@@ -2595,7 +2588,9 @@ CSCCathodeLCTProcessor::findLCTsSLHC(const std::vector<int> halfstrip[CSCConstan
           // do not consider halfstrips:
           //   - out of pretrigger-trigger zones
           //   - in busy zones from previous trigger
-          if (quality[hstrip] > best_quality[0] && pretrig_zone[hstrip] && !busyMap[hstrip][first_bx])
+          if (quality[hstrip] > best_quality[0] &&
+              pretrig_zone[hstrip] &&
+              !busyMap[hstrip][first_bx] )
           {
             best_halfstrip[0] = hstrip;
             best_quality[0] = quality[hstrip];
@@ -2617,7 +2612,9 @@ CSCCathodeLCTProcessor::findLCTsSLHC(const std::vector<int> halfstrip[CSCConstan
 
         for (int hstrip = stagger[CSCConstants::KEY_CLCT_LAYER - 1]; hstrip < maxHalfStrips; hstrip++)
         {
-          if (quality[hstrip] > best_quality[1] && pretrig_zone[hstrip] && !busyMap[hstrip][first_bx])
+          if (quality[hstrip] > best_quality[1] &&
+              pretrig_zone[hstrip] &&
+              !busyMap[hstrip][first_bx] )
           {
             best_halfstrip[1] = hstrip;
             best_quality[1] = quality[hstrip];
@@ -2775,10 +2772,8 @@ void CSCCathodeLCTProcessor::dumpConfigParams() const {
 void CSCCathodeLCTProcessor::dumpDigis(const std::vector<int> strip[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS], const int stripType, const int nStrips) const
 {
   LogDebug("CSCCathodeLCTProcessor")
-    << "ME" << ((theEndcap == 1) ? "+" : "-") << theStation << "/"
-    << theRing
-    << "/" << CSCTriggerNumbering::chamberFromTriggerLabels(theSector,
-                                    theSubsector, theStation, theTrigChamber)
+    << "ME" << ((theEndcap == 1) ? "+" : "-")
+    << theStation << "/" << theRing << "/" << theChamber
     << " strip type " << stripType << " nStrips " << nStrips;
 
   std::ostringstream strstrm;

@@ -23,7 +23,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Id: CSCCathodeLCTProcessor.h,v 1.25.2.1 2012/05/16 00:31:24 khotilov Exp $
+ * $Id: CSCCathodeLCTProcessor.h,v 1.25.2.2 2012/10/17 06:54:05 khotilov Exp $
  *
  */
 
@@ -88,7 +88,9 @@ class CSCCathodeLCTProcessor
 			     int stag_digi[CSCConstants::MAX_NUM_STRIPS],
 			     int i_distrip, bool debug = false);
 
-  /** set ring number */
+  /** Set ring number
+   * Has to be done for upgrade ME1a!
+   **/
   void setRing(unsigned r) {theRing = r;}
 
   /** Pre-defined patterns. */
@@ -122,7 +124,10 @@ class CSCCathodeLCTProcessor
   const unsigned theSubsector;
   const unsigned theTrigChamber;
   
+  // holders for easy access:
   unsigned int theRing;
+  unsigned int theChamber;
+  bool isME11;
   
   int numStrips;
   int stagger[CSCConstants::NUM_LAYERS];
@@ -146,8 +151,8 @@ class CSCCathodeLCTProcessor
   unsigned int pid_thresh_pretrig,  min_separation;
   unsigned int tmb_l1a_window_size;
 
-  /** VK: awkward workaround to be able to set values by config file */
-  //unsigned int hit_persist_my, nplanes_hit_pretrig_my, pid_thresh_pretrig_my, min_separation_my;
+  /** VK: some quick and dirty fix to reduce CLCT deadtime */
+  int start_bx_shift;
 
   /** VK: special configuration parameters for ME1a treatment */
   bool smartME1aME1b, disableME1a, gangedME1a;
@@ -155,9 +160,6 @@ class CSCCathodeLCTProcessor
   /** VK: separate handle for early time bins */
   int early_tbins;
 
-  /** VK: some quick and dirty fix to reduce CLCT deadtime */
-  int start_bx_shift;
-  
   /** VK: use of localized dead-time zones */
   bool use_dead_time_zoning;
   unsigned int clct_state_machine_zone; // +- around a keystrip
@@ -260,10 +262,6 @@ class CSCCathodeLCTProcessor
 
   std::vector<CSCCLCTDigi> findLCTsSLHC(
     const std::vector<int>  halfstrip[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS]);
-
-  bool preTriggerSLHC(
-    const unsigned int pulse[CSCConstants::NUM_LAYERS][CSCConstants::NUM_HALF_STRIPS],
-    const int start_bx, int& first_bx);
 
   bool ispretrig[CSCConstants::NUM_HALF_STRIPS];
 
