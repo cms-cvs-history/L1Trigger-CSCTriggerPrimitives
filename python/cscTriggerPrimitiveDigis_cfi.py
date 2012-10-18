@@ -22,27 +22,25 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         isTMB07 = cms.bool(True),
         isMTCC = cms.bool(False),
         
-        # flag for SLHC studies
+        # Flag for SLHC studies (upgraded ME11, MPC)
         # (if true, isTMB07 should be true as well)
-        isSLHC = cms.untracked.bool(False),
+        isSLHC = cms.untracked.bool(True),
 
         # ME1a configuration:
-        # naiveME1aME1b=f, smartME1aME1b=f
+        # smartME1aME1b=f, gangedME1a=t
         #   default logic for current HW
-        # naiveME1aME1b=t, smartME1aME1b=f
-        #   naive: both 1/a and 1/b get an ALCT and a CLCT finders
-        #   and act as separate chambers
-        # naiveME1aME1b=f, smartME1aME1b=t, gangedME1a=f
-        #   realistic upgrade scenario: one ALCT finder and two CLCT finders
-        #   per ME11, with additional logic for A/CLCT matching
-        #   with ME1a unganged
-        # naiveME1aME1b=f, smartME1aME1b=t, gangedME1a=t
-        #   previous case with ME1a still ganged
+        # smartME1aME1b=t, gangedME1a=f
+        #   realistic upgrade scenario: 
+        #   one ALCT finder and two CLCT finders per ME11
+        #   with additional logic for A/CLCT matching with ME1a unganged
+        # smartME1aME1b=t, gangedME1a=t
+        #   the previous case with ME1a still being ganged
         # Note: gangedME1a has effect only if smartME1aME1b=t
-        naiveME1aME1b = cms.untracked.bool(False),
-        smartME1aME1b = cms.untracked.bool(False),
-        disableME1a = cms.untracked.bool(False),
+        smartME1aME1b = cms.untracked.bool(True),
         gangedME1a = cms.untracked.bool(False),
+        
+        # flagis to optionally disable finding stubs in ME42 or ME1a
+        disableME1a = cms.untracked.bool(False),
         disableME42 = cms.untracked.bool(False)
     ),
 
@@ -81,24 +79,35 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         alctFifoTbins   = cms.uint32(16),
         alctFifoPretrig = cms.uint32(10),
         alctDriftDelay  = cms.uint32(2),
-        alctNplanesHitPretrig = cms.uint32(2),
+        alctNplanesHitPretrig = cms.uint32(3),
         alctNplanesHitPattern = cms.uint32(4),
-        alctNplanesHitAccelPretrig = cms.uint32(2),
+        alctNplanesHitAccelPretrig = cms.uint32(3),
         alctNplanesHitAccelPattern = cms.uint32(4),
         alctTrigMode       = cms.uint32(2),
         alctAccelMode      = cms.uint32(0),
         alctL1aWindowWidth = cms.uint32(7),
-        alctEarlyTbins = cms.untracked.int32(4),
         verbosity = cms.untracked.int32(0),
 
+        # Configure early_tbins instead of hardcoding it
+        alctEarlyTbins = cms.untracked.int32(4),
+
+        # Use narrow pattern mask for ring 1 chambers
+        alctNarrowMaskForR1 = cms.untracked.bool(True),
+
+        # configured, not hardcoded, hit persistency
         alctHitPersist  = cms.untracked.uint32(6),
-        alctGhostCancellationBxDepth = cms.untracked.uint32(4),
-        alctGhostCancellationSideQuality = cms.untracked.bool(False),
-        alctPretrigDeadtime = cms.untracked.uint32(4),
-        alctUseCorrectedBx = cms.untracked.bool(False),
-        alctBxOffsets = cms.untracked.vdouble(
-          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        alctNarrowMaskForR1 = cms.untracked.bool(False)
+        
+        # configure, not hardcode, up to how many BXs in the past
+        # ghost cancellation in neighboring WGs may happen
+        alctGhostCancellationBxDepth = cms.untracked.int32(1),
+        
+        # whether to compare the quality of stubs in neighboring WGs in the past
+        # to the quality of a stub in current WG 
+        # when doing ghost cancellation 
+        alctGhostCancellationSideQuality = cms.untracked.bool(True),
+        
+        # how soon after pretrigger and alctDriftDelay can next pretrigger happen?
+        alctPretrigDeadtime = cms.untracked.uint32(4)
     ),
 
     # Parameters for ALCT processors: SLHC studies
@@ -106,24 +115,41 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
         alctFifoTbins   = cms.uint32(16),
         alctFifoPretrig = cms.uint32(10),
         alctDriftDelay  = cms.uint32(2),
-        alctNplanesHitPretrig = cms.uint32(2),
+        alctNplanesHitPretrig = cms.uint32(3),
         alctNplanesHitPattern = cms.uint32(4),
-        alctNplanesHitAccelPretrig = cms.uint32(2),
+        alctNplanesHitAccelPretrig = cms.uint32(3),
         alctNplanesHitAccelPattern = cms.uint32(4),
         alctTrigMode       = cms.uint32(2),
         alctAccelMode      = cms.uint32(0),
-        alctL1aWindowWidth = cms.uint32(3),
-        alctEarlyTbins = cms.untracked.int32(4),
+        alctL1aWindowWidth = cms.uint32(7),
         verbosity = cms.untracked.int32(0),
 
+        # Configure early_tbins instead of hardcoding it
+        alctEarlyTbins = cms.untracked.int32(4),
+
+        # Use narrow pattern mask for ring 1 chambers
+        alctNarrowMaskForR1 = cms.untracked.bool(True),
+
+        # configured, not hardcoded, hit persistency
         alctHitPersist  = cms.untracked.uint32(6),
-        alctGhostCancellationBxDepth = cms.untracked.uint32(4),
-        alctGhostCancellationSideQuality = cms.untracked.bool(False),
-        alctPretrigDeadtime = cms.untracked.uint32(4),
-        alctUseCorrectedBx = cms.untracked.bool(False),
-        alctBxOffsets = cms.untracked.vdouble(
-          0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
-        alctNarrowMaskForR1 = cms.untracked.bool(False)
+
+                # configure, not hardcode, up to how many BXs in the past
+        # ghost cancellation in neighboring WGs may happen
+        alctGhostCancellationBxDepth = cms.untracked.int32(1),
+        
+        # whether to compare the quality of stubs in neighboring WGs in the past
+        # to the quality of a stub in current WG 
+        # when doing ghost cancellation 
+        alctGhostCancellationSideQuality = cms.untracked.bool(True),
+        
+        # how soon after pretrigger and alctDriftDelay can next pretrigger happen?
+        alctPretrigDeadtime = cms.untracked.uint32(0),
+        
+        # SLHC only for ME11:
+        # whether to store the "corrected" ALCT stub time 
+        # (currently it is median time of particular hits in a pattern) into the ASCCLCTDigi bx,
+        # and temporary store the regular "key layer hit" time into the CSCCLCTDigi fullBX:
+        alctUseCorrectedBx = cms.untracked.bool(True)
     ),
 
     # Parameters for CLCT processors: old MC studies
@@ -158,16 +184,18 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
     clctParam07 = cms.PSet(
         clctFifoTbins   = cms.uint32(12),
         clctFifoPretrig = cms.uint32(7),
-        clctHitPersist  = cms.uint32(6),
+        clctHitPersist  = cms.uint32(4),
         clctDriftDelay  = cms.uint32(2),
-        clctNplanesHitPretrig = cms.uint32(2),
+        clctNplanesHitPretrig = cms.uint32(3),
         clctNplanesHitPattern = cms.uint32(4),
-        clctPidThreshPretrig  = cms.uint32(2),
-        clctMinSeparation     = cms.uint32(10),
+        # increase pattern ID threshold from 2 to 4 to trigger higher pt tracks  
+        clctPidThreshPretrig  = cms.uint32(4),
+        # decrease possible minimal #HS distance between two CLCTs in a BX from 10 to 5:
+        clctMinSeparation     = cms.uint32(5),
         # Debug
         verbosity = cms.untracked.int32(0),
 
-        # BX to start CLCT finding
+        # BX to start CLCT finding (poor man's dead-time shortening):
         clctStartBxShift  = cms.untracked.int32(0)
     ),
 
@@ -175,45 +203,121 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
     clctSLHC = cms.PSet(
         clctFifoTbins   = cms.uint32(12),
         clctFifoPretrig = cms.uint32(7),
-        clctHitPersist  = cms.uint32(6),
+        clctHitPersist  = cms.uint32(4),
         clctDriftDelay  = cms.uint32(2),
-        clctNplanesHitPretrig = cms.uint32(2),
+        clctNplanesHitPretrig = cms.uint32(3),
         clctNplanesHitPattern = cms.uint32(4),
-        clctPidThreshPretrig  = cms.uint32(2),
-        clctMinSeparation     = cms.uint32(8),
+        # increase pattern ID threshold from 2 to 4 to trigger higher pt tracks  
+        clctPidThreshPretrig  = cms.uint32(4),
+        # decrease possible minimal #HS distance between two CLCTs in a BX from 10 to 5:
+        clctMinSeparation     = cms.uint32(5),
         # Debug
         verbosity = cms.untracked.int32(0),
 
-        # poor man's deadtime shortening
+        # BX to start CLCT finding (poor man's to shorten the dead-time):
         clctStartBxShift  = cms.untracked.int32(0),
-        # use of localized dead-time zones
+        
+        # Turns on algorithms of localized dead-time zones:
         useDeadTimeZoning = cms.untracked.bool(True),
+        
+        # Width (in #HS) of a fixed dead zone around a key HS:
         clctStateMachineZone = cms.untracked.uint32(8),
+        
+        # Enables the algo which instead of using the fixed dead zone width, 
+        # varies it depending on the width of a triggered CLCT pattern
+        # (if True, the clctStateMachineZone is ignored):
         useDynamicStateMachineZone = cms.untracked.bool(True),
-        # pretrigger to trigger matching zone
+        
+        # Pretrigger HS +- clctPretriggerTriggerZone sets the trigger matching zone
+        # which defines how far from pretrigger HS the TMB may look for a trigger HS
+        # (it becomes important to do so with localized dead-time zoning): 
         clctPretriggerTriggerZone = cms.untracked.uint32(5),
-        clctUseCorrectedBx = cms.untracked.bool(False)
+        
+        # whether to store the "corrected" CLCT stub time 
+        # (currently it is median time of all hits in a pattern) into the CSCCLCTDigi bx,
+        # and temporary store the regular "key layer hit" time into the CSCCLCTDigi fullBX:
+        clctUseCorrectedBx = cms.untracked.bool(True)
     ),
 
     tmbParam = cms.PSet(
-        mpcBlockMe1a    = cms.uint32(1),
+        mpcBlockMe1a    = cms.uint32(0),
         alctTrigEnable  = cms.uint32(0),
         clctTrigEnable  = cms.uint32(0),
         matchTrigEnable = cms.uint32(1),
+        # reduce ALCT-CLCT matching window size from 7 to 3
         matchTrigWindowSize = cms.uint32(3),
-        tmbL1aWindowSize = cms.uint32(3),
+        tmbL1aWindowSize = cms.uint32(7),
         # Debug
         verbosity = cms.untracked.int32(0),
 
+        # Configure early_tbins instead of hardcoding it
         tmbEarlyTbins = cms.untracked.int32(4),
-        clctToAlct = cms.untracked.bool(True),
+        
+        # Flag for whether to readout only the earliest max two LCTs in a 
+        # L1A readout window, as there is only room just for two in the TMB header.
+        # If false, all LCTs would be readout in L1A window.
+        tmbReadoutEarliest2 = cms.untracked.bool(True),
+
+        # For CLCT-centric matching, whether to drop ALCTs that were matched
+        # to CLCTs in this BX, and not use them in the following BX 
+        # (default non-upgrade TMB behavior).
+        tmbDropUsedAlcts = cms.untracked.bool(True)
+    ),
+
+    # to be used by ME11 chambers with upgraded TMB and ALCT
+    tmbSLHC = cms.PSet(
+        mpcBlockMe1a    = cms.uint32(0),
+        alctTrigEnable  = cms.uint32(0),
+        clctTrigEnable  = cms.uint32(0),
+        matchTrigEnable = cms.uint32(1),
+        # reduce ALCT-CLCT matching window size from 7 to 3
+        matchTrigWindowSize = cms.uint32(3),
+        tmbL1aWindowSize = cms.uint32(7),
+        # Debug
+        verbosity = cms.untracked.int32(0),
+
+        # Configure early_tbins instead of hardcoding it
+        tmbEarlyTbins = cms.untracked.int32(4),
+        
+        # Flag for whether to readout only the earliest max two LCTs in a 
+        # L1A readout window, as there is only room just for two in the TMB header.
+        # If false, all LCTs would be readout in L1A window.
+        tmbReadoutEarliest2 = cms.untracked.bool(False),
+
+        # For CLCT-centric matching, whether to drop ALCTs that were matched
+        # to CLCTs in this BX, and not use them in the following BX 
+        # (default non-upgrade TMB behavior).
         tmbDropUsedAlcts = cms.untracked.bool(False),
+
+        # Switch to enable
+        #  True = CLCT-centric matching (default non-upgrade behavior, 
+        #         take CLCTs in BX look for matching ALCTs in window)
+        #  False = ALCT-centric matching (recommended for SLHC, 
+        #         take ALCTs in BX look for matching CLCTs in window)
+        clctToAlct = cms.untracked.bool(False),
+
+        # For ALCT-centric matching, whether to drop CLCTs that were matched
+        # to ALCTs in this BX, and not use them in the following BX 
         tmbDropUsedClcts = cms.untracked.bool(False),
-        matchEarliestAlctME11Only = cms.untracked.bool(True),
-        matchEarliestClctME11Only = cms.untracked.bool(True),
-        tmbCrossBxAlgorithm = cms.untracked.uint32(0),
-        maxME11LCTs = cms.untracked.uint32(4),
-        tmbReadoutEarliest2 = cms.untracked.bool(False)
+        
+        # For CLCT-centric matching in ME11, break after finding 
+        # the first BX with matching ALCT 
+        matchEarliestAlctME11Only = cms.untracked.bool(False),
+        
+        # For ALCT-centric matching in ME11, break after finding 
+        # the first BX with matching CLCT 
+        matchEarliestClctME11Only = cms.untracked.bool(False),
+        
+        # 0 = default "non-X-BX" sorting algorithm, 
+        #     where the first BX with match goes first
+        # 1 = simple X-BX sorting algorithm, 
+        #     where the central match BX goes first, 
+        #     then the closest early, the slocest late, etc.
+        tmbCrossBxAlgorithm = cms.untracked.uint32(1),
+        
+        # How many maximum LCTs per whole chamber per BX to keep
+        # (supposedly, 1b and 1a can have max 2 each)
+        maxME11LCTs = cms.untracked.uint32(2)
     ),
 
     # MPC sorter config for SLHC studies
