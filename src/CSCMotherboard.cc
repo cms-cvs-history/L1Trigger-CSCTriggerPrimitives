@@ -27,7 +27,7 @@
 //                Based on code by Nick Wisniewski (nw@its.caltech.edu)
 //                and a framework by Darin Acosta (acosta@phys.ufl.edu).
 //
-//   $Id: CSCMotherboard.cc,v 1.33.2.1 2012/05/16 00:31:25 khotilov Exp $
+//   $Id: CSCMotherboard.cc,v 1.33.2.2 2012/10/15 23:20:12 khotilov Exp $
 //
 //   Modifications: Numerous later improvements by Jason Mumford and
 //                  Slava Valuev (see cvs in ORCA).
@@ -68,25 +68,15 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
   // Switch for a new (2007) version of the TMB firmware.
   isTMB07 = commonParams.getParameter<bool>("isTMB07");
 
-  // Switch for a new (2007) version of the TMB firmware.
-  isSLHC = commonParams.getUntrackedParameter<bool>("isSLHC",false);
-
-  // special configuration parameters for ME11 treatment
-  naiveME1aME1b = commonParams.getUntrackedParameter<bool>("naiveME1aME1b",false);
-  smartME1aME1b = commonParams.getUntrackedParameter<bool>("smartME1aME1b",false);
-  disableME1a = commonParams.getUntrackedParameter<bool>("disableME1a",false);
-  gangedME1a = commonParams.getUntrackedParameter<bool>("gangedME1a",true);
+  // is it (non-upgrade algorithm) run along with upgrade one?
+  isSLHC = commonParams.getUntrackedParameter<bool>("isSLHC");
 
   // Choose the appropriate set of configuration parameters depending on
   // isTMB07 and isMTCC flags.
   // Starting with CMSSW_3_1_X, these settings are overwritten by the
   // ones delivered by the EventSetup mechanism.
   edm::ParameterSet alctParams, clctParams;
-  if (isSLHC) {
-    alctParams = conf.getParameter<edm::ParameterSet>("alctSLHC");
-    clctParams = conf.getParameter<edm::ParameterSet>("clctSLHC");
-  }
-  else if (isTMB07) {
+  if (isTMB07) {
     alctParams = conf.getParameter<edm::ParameterSet>("alctParam07");
     clctParams = conf.getParameter<edm::ParameterSet>("clctParam07");
   }
@@ -99,9 +89,16 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
     clctParams = conf.getParameter<edm::ParameterSet>("clctParamOldMC");
   }
 
-  // Motherboard parameters: common for all configurations.
-  edm::ParameterSet tmbParams  =
-    conf.getParameter<edm::ParameterSet>("tmbParam");
+  // Motherboard parameters:
+  edm::ParameterSet tmbParams  =  conf.getParameter<edm::ParameterSet>("tmbParam");
+
+  if (isSLHC && theStation == 1 &&
+      CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber) == 1 ) {
+    alctParams = conf.getParameter<edm::ParameterSet>("alctSLHC");
+    clctParams = conf.getParameter<edm::ParameterSet>("clctSLHC");
+    tmbParams  =  conf.getParameter<edm::ParameterSet>("tmbSLHC");
+  }
+
   mpc_block_me1a    = tmbParams.getParameter<unsigned int>("mpcBlockMe1a");
   alct_trig_enable  = tmbParams.getParameter<unsigned int>("alctTrigEnable");
   clct_trig_enable  = tmbParams.getParameter<unsigned int>("clctTrigEnable");
@@ -111,11 +108,11 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
   tmb_l1a_window_size = // Common to CLCT and TMB
     tmbParams.getParameter<unsigned int>("tmbL1aWindowSize");
 
-  // whether to not reuse ALCTs that were used by previous matching CLCTs
-  drop_used_alcts = tmbParams.getUntrackedParameter<bool>("tmbDropUsedAlcts",true);
-
   // configuration handle for number of early time bins
   early_tbins = tmbParams.getUntrackedParameter<int>("tmbEarlyTbins",4);
+
+  // whether to not reuse ALCTs that were used by previous matching CLCTs
+  drop_used_alcts = tmbParams.getUntrackedParameter<bool>("tmbDropUsedAlcts",true);
 
   // whether to readout only the earliest two LCTs in readout window
   readout_earliest_2 = tmbParams.getUntrackedParameter<bool>("tmbReadoutEarliest2",false);
@@ -127,8 +124,7 @@ CSCMotherboard::CSCMotherboard(unsigned endcap, unsigned station,
   clct = new CSCCathodeLCTProcessor(endcap, station, sector, subsector,
 				    chamber, clctParams, commonParams, tmbParams);
 
-
-  if (theStation==1 && CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber)==2) infoV = 3;
+  //if (theStation==1 && CSCTriggerNumbering::ringFromTriggerLabels(theStation, theTrigChamber)==2) infoV = 3;
 
   // Check and print configuration parameters.
   checkConfigParameters();
@@ -150,11 +146,6 @@ CSCMotherboard::CSCMotherboard() :
 
   isMTCC  = false;
   isTMB07 = true;
-  isSLHC = true;
-
-  naiveME1aME1b = false;
-  smartME1aME1b = false;
-  disableME1a = false;
 
   early_tbins = 4;
 
@@ -327,7 +318,7 @@ void CSCMotherboard::run(
   }
 }
 
-std::vector<CSCCorrelatedLCTDigi>
+void
 CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
 		    const CSCComparatorDigiCollection* compdc) {
   clear();
@@ -362,6 +353,7 @@ CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
 	int bx_alct_start = bx_clct - match_trig_window_size/2;
         int bx_alct_stop  = bx_clct + match_trig_window_size/2;
         // Empirical correction to match 2009 collision data (firmware change?)
+        // (but don't do it for SLHC case, assume it would not be there)
         if (!isSLHC) bx_alct_stop += match_trig_window_size%2;
 
 	for (int bx_alct = bx_alct_start; bx_alct <= bx_alct_stop; bx_alct++) {
@@ -424,9 +416,6 @@ CSCMotherboard::run(const CSCWireDigiCollection* wiredc,
     if (infoV >= 0) edm::LogError("L1CSCTPEmulatorSetupError")
       << "+++ run() called for non-existing ALCT/CLCT processor! +++ \n";
   }
-
-  std::vector<CSCCorrelatedLCTDigi> tmpV = readoutLCTs();
-  return tmpV;
 }
 
 // Returns vector of read-out correlated LCTs, if any.  Starts with

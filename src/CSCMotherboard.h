@@ -31,7 +31,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Id: $
+ * $Id: CSCMotherboard.h,v 1.15.2.1 2012/05/16 00:31:25 khotilov Exp $
  *
  */
 
@@ -60,8 +60,7 @@ class CSCMotherboard
 
   /** Run function for normal usage.  Runs cathode and anode LCT processors,
       takes results and correlates into CorrelatedLCT. */
-  std::vector<CSCCorrelatedLCTDigi> run(const CSCWireDigiCollection* wiredc,
-				    const CSCComparatorDigiCollection* compdc);
+  void run(const CSCWireDigiCollection* wiredc, const CSCComparatorDigiCollection* compdc);
 
   /** Returns vector of correlated LCTs in the read-out time window, if any. */
   std::vector<CSCCorrelatedLCTDigi> readoutLCTs();
@@ -109,9 +108,6 @@ class CSCMotherboard
   unsigned int mpc_block_me1a;
   unsigned int alct_trig_enable, clct_trig_enable, match_trig_enable;
   unsigned int match_trig_window_size, tmb_l1a_window_size;
-
-  /** SLHC: special configuration parameters for ME11 treatment. */
-  bool naiveME1aME1b, smartME1aME1b, disableME1a, gangedME1a;
 
   /** SLHC: whether to not reuse ALCTs that were used by previous matching CLCTs */
   bool drop_used_alcts;
