@@ -11,7 +11,7 @@
  *
  * \author Slava Valuev, UCLA.
  *
- * $Id: $
+ * $Id: CSCTriggerPrimitivesBuilder.h,v 1.8.2.1 2012/05/16 00:31:25 khotilov Exp $
  *
  */
 
@@ -77,7 +77,7 @@ class CSCTriggerPrimitivesBuilder
   bool skipbadchamber;
 
   /** SLHC: special configuration parameters for ME11 treatment. */
-  bool naiveME1aME1b, smartME1aME1b, disableME1a;
+  bool smartME1aME1b, disableME1a;
 
   /** SLHC: special switch for disabling ME42 */
   bool disableME42;
