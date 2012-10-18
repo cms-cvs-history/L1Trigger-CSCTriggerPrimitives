@@ -13,7 +13,7 @@
  * in ORCA).
  * Porting from ORCA by S. Valuev (Slava.Valuev@cern.ch), May 2006.
  *
- * $Id: CSCAnodeLCTProcessor.h,v 1.22.2.2 2012/10/15 23:16:41 khotilov Exp $
+ * $Id: CSCAnodeLCTProcessor.h,v 1.22.2.3 2012/10/17 06:54:05 khotilov Exp $
  *
  */
 
@@ -101,6 +101,10 @@ class CSCAnodeLCTProcessor
   /** ring number. Only matters for ME1a */
   unsigned theRing;
 
+  unsigned theChamber;
+
+  bool isME11;
+
   int numWireGroups;
   int MESelection;
 
@@ -127,16 +131,15 @@ class CSCAnodeLCTProcessor
 
   /** SLHC: hit persistency length */
   unsigned int hit_persist;
-  //unsigned int nplanes_hit_pretrig_my, l1a_window_width_my;
 
   /** SLHC: special configuration parameters for ME1a treatment */
-  bool smartME1aME1b, disableME1a;
+  bool disableME1a;
 
   /** SLHC: separate handle for early time bins */
   int early_tbins;
 
   /** SLHC: delta BX time depth for ghostCancellationLogic */
-  unsigned int ghost_cancellation_bx_depth;
+  int ghost_cancellation_bx_depth;
 
   /** SLHC: whether to consider ALCT candidates' qualities 
       while doing ghostCancellationLogic on +-1 wire groups */
@@ -163,6 +166,9 @@ class CSCAnodeLCTProcessor
   /** Chosen pattern mask. */
   int pattern_mask[CSCConstants::NUM_ALCT_PATTERNS][NUM_PATTERN_WIRES];
 
+  /** Load pattern mask defined by configuration into pattern_mask */
+  void loadPatternMask();
+
   /** Set default values for configuration parameters. */
   void setDefaultConfigParameters();
 
@@ -178,6 +184,7 @@ class CSCAnodeLCTProcessor
   bool preTrigger(const int key_wire, const int start_bx);
   bool patternDetection(const int key_wire);
   void ghostCancellationLogic();
+  void ghostCancellationLogicSLHC();
   void lctSearch();
   void trigMode(const int key_wire);
   void accelMode(const int key_wire);
