@@ -322,6 +322,6 @@ cscTriggerPrimitiveDigis = cms.EDProducer("CSCTriggerPrimitivesProducer",
 
     # MPC sorter config for SLHC studies
     mpcSLHC = cms.PSet(
-        mpcMaxStubs = cms.untracked.uint32(18)
+        mpcMaxStubs = cms.untracked.uint32(3)
     )
 )
