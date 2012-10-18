@@ -3,14 +3,15 @@
 
 /** \class CSCMotherboardME11
  *
- * Extended CSCMotherboard for ME11 to handle ME1a and ME1b separately
+ * Extended CSCMotherboard for ME11 TMB upgrade
+ * to handle ME1b and (primarily unganged) ME1a separately
  *
  * \author Vadim Khotilovich 12 May 2009
  *
  * Based on CSCMotherboard code
  *
- * $Date: 2009/07/23 08:14:48 $
- * $Revision: 1.1.2.1 $
+ * $Date: 2012/05/16 00:31:25 $
+ * $Revision: 1.1.4.2 $
  *
  */
 
@@ -33,20 +34,19 @@ class CSCMotherboardME11 : public CSCMotherboard
 
   /** Run function for normal usage.  Runs cathode and anode LCT processors,
       takes results and correlates into CorrelatedLCT. */
-  void runME11(const CSCWireDigiCollection* wiredc,
-	       const CSCComparatorDigiCollection* compdc);
+  void run(const CSCWireDigiCollection* wiredc,
+	   const CSCComparatorDigiCollection* compdc);
 
   /** Returns vectors of found correlated LCTs in ME1a and ME1b, if any. */
   std::vector<CSCCorrelatedLCTDigi> getLCTs1a();
   std::vector<CSCCorrelatedLCTDigi> getLCTs1b();
 
   /** Returns vectors of found ALCTs in ME1a and ME1b, if any. */
-  std::vector<CSCALCTDigi> getALCTs1a() {return alctV1a;}
   std::vector<CSCALCTDigi> getALCTs1b() {return alctV;}
 
   /** Returns vectors of found CLCTs in ME1a and ME1b, if any. */
   std::vector<CSCCLCTDigi> getCLCTs1a() {return clctV1a;}
-  std::vector<CSCCLCTDigi> getCLCTs1b() {return clctV;}
+  std::vector<CSCCLCTDigi> getCLCTs1b() {return clctV1b;}
 
   /** Clears correlated LCT and passes clear signal on to cathode and anode
       LCT processors. */
@@ -54,9 +54,6 @@ class CSCMotherboardME11 : public CSCMotherboard
 
   /** Set configuration parameters obtained via EventSetup mechanism. */
   void setConfigParameters(const CSCDBL1TPParameters* conf);
-
-  /** additional Anode LCT processor for ME1a */
-  CSCAnodeLCTProcessor* alct1a;
 
   /** additional Cathode LCT processor for ME1a */
   CSCCathodeLCTProcessor* clct1a;
@@ -73,7 +70,10 @@ class CSCMotherboardME11 : public CSCMotherboard
   static const int lut_wg_vs_hs_me1b[48][2];
   static const int lut_wg_vs_hs_me1a[48][2];
   static const int lut_wg_vs_hs_me1ag[48][2];
-  
+ 
+  /** SLHC: special configuration parameters for ME11 treatment. */
+  bool smartME1aME1b, disableME1a, gangedME1a;
+
   bool doesALCTCrossCLCT(CSCALCTDigi &a, CSCCLCTDigi &c, int me);
 
   /** Container for first correlated LCT in ME1a. */
@@ -84,7 +84,7 @@ class CSCMotherboardME11 : public CSCMotherboard
 
   /** for the case when more than 2 LCTs/BX are allowed;
       maximum match window = 15 */
-  CSCCorrelatedLCTDigi allLCTs[MAX_LCT_BINS][15][2];
+  CSCCorrelatedLCTDigi allLCTs1b[MAX_LCT_BINS][15][2];
   CSCCorrelatedLCTDigi allLCTs1a[MAX_LCT_BINS][15][2];
 
   void correlateLCTs(CSCALCTDigi bestALCT, CSCALCTDigi secondALCT,
@@ -96,11 +96,10 @@ class CSCMotherboardME11 : public CSCMotherboard
 		     CSCCorrelatedLCTDigi& lct1, CSCCorrelatedLCTDigi& lct2, int me);
 
   std::vector<CSCALCTDigi> alctV;
-  std::vector<CSCCLCTDigi> clctV;
-  std::vector<CSCALCTDigi> alctV1a;
+  std::vector<CSCCLCTDigi> clctV1b;
   std::vector<CSCCLCTDigi> clctV1a;
 
-  /** preferential index array in matching window for cross-BX sorting */
+  /** "preferential" index array in matching window for cross-BX sorting */
   int pref[MAX_LCT_BINS];
 
   bool match_earliest_alct_me11_only;
